@@ -17,20 +17,28 @@ This program requires python 2.7.
 
 #Data:
 
-To run the analysis, data is required in the form of a .csv. This can be obtained through this repository, or via https://www.ncdc.noaa.gov/cdo-web/search?datasetid=GHCND. *At the moment* the looping function in the Master.py file is not working, so only single stations can be run at a time. Therefore, only one station can be downloaded at a time (1 per .csv). The data required for this analysis is listed below:
+To run the analysis, data is required in the form of a .csv. Test data can be obtained through this repository, or via https://www.ncdc.noaa.gov/cdo-web/search?datasetid=GHCND. The test data within this repository is highly parsed and modified to emulate corrupt and incomplete data. *At the moment* the looping function in the Master.py file is not working, only single stations can be run at a time. Therefore, only one station can be downloaded at a time (1 per .csv). The data required for this analysis is listed below:
+
+#### DOWNLOAD DETAILS PRIOR TO DATA REQUEST TO NCDC ####
 
 Station Detail & Data Flag Options:
   1) Station Name
   2) Geographic Location
-  3) *Units* This program will work with either standard or metric units
+  3) Units *This program will work with either standard or metric units*
   
 Select data types for custom output:
   1) Precipitation:
+  
     * Precipitation (PRCP)
+    
     * Snowfall (SNOW)
+    
   2) Air Temperature
+  
     * Maximum temperature (TMAX)
+    
     * Minimum temperature (TMIN)
+    
     * Temperature at the time of observation (TOBS)
 
 #Using the Program:
@@ -39,7 +47,7 @@ Data is available within this repository for the Foreman weather station in Nort
 
 Within Command Prompt:
 
-C:\(wherever the files have been placed)> python Master.py
+C:\\(wherever the files have been placed)> python Master.py
 
 
 

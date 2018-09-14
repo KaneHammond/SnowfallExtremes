@@ -9,7 +9,11 @@ Python 2.7
   6. Check for correlations over time.
   
 ###### Instructions:
-This program requires python 2.7. 
+This program requires python 2.7.
+
+*Download => https://www.python.org/download/releases/2.7/
+
+*Adding Paths => https://helpdeskgeek.com/windows-10/add-windows-path-environment-variable/
 
 #Data:
 
@@ -33,5 +37,9 @@ Select data types for custom output:
 
 Data is available within this repository for the Foreman weather station in North Dakota. The dataset has been edited to incorporate errors. This was done for checking the elasticity of the program. To run the analysis, all python files, accompanied by the .csv data, must be located in the same folder. Once they are all located in the same vicinity, the program can be initiated from the command prompt (python 2.7 must be installed and have appropriate path access). In order to do this, change the directory path in the command prompt to the location of the python files and data. Once the file path has been adjusted, the Master.py module can be initiated by: 
 
-python Master.py
+Within Command Prompt:
+
+C:\(wherever the files have been placed)> python Master.py
+
+
 

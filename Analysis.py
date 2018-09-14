@@ -1,4 +1,6 @@
 
+print "Analysis Imported"
+
 import csv
 import sys
 import os
@@ -86,21 +88,14 @@ f = 'pdf' # Defines graphical output format
 FirstYear = 1950
 
 ### PROCESS RAW DATA
-start = time.time()
 import SplitData
 SplitData
 from SplitData import *
-end = time.time()
-print(end - start)
 
 ### SNOWFALL ANALYSIS
-
-start = time.time()
 import Snowfall_Analysis
 Snowfall_Analysis
 from Snowfall_Analysis import *
-end = time.time()
-print(end - start)
 
 # ## TEMP ANALYSIS
 import Temperature_Analysis

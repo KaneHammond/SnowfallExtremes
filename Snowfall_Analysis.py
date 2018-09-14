@@ -1,5 +1,13 @@
 from Analysis import *
 
+dir = StationName+"/Snowfall"
+if not os.path.exists(dir):
+    os.makedirs(StationName+"/Snowfall")
+else:
+    shutil.rmtree(dir)
+    os.makedirs(dir)
+
+# os.makedirs(os.path.join(StationName, 'Snowfall'))
 #*****************************************Snow only index****************
 #Format [Year, DD, MM, Precip, Snow, Tmax, Tmin, TOBS, Hydro Year]
 # The imported list contains no blank ("") snow records. 
@@ -52,7 +60,7 @@ snowDays = copy.deepcopy(Count.values())
 TotalSDcheck = sum(snowDays)
 if TotalSDcheck-TotalnumbSnowDays!=0:
     temp = TotalSDcheck-TotalnumbSnowDays
-    print ("/*/*/*/*/*/*/*/*/*/*/*/\n******Annual Snowday Miscalculation by a value of %i******\n/*/*/*/*/*/*/*/*/*/*/*/" % (temp))
+    print (" \n******Annual Snowday Miscalculation by a value of %i******\n " % (temp))
 #**********************************Yearly Snow Totals****************
 # Record reset at change of each hydro year. Used to count totals per year.
 TotalAnSnowfall = 0
@@ -300,7 +308,7 @@ ax.legend(loc='right')
 ax.set_title('Cumulative Distrbution of Snowfall')
 ax.set_xlabel('Daily Snowfall (mm)')
 ax.set_ylabel('CDF Value')
-plt.savefig('%s/CDF_Snowfall.%s' % (StationName, f), 
+plt.savefig('%s/%s/CDF_Snowfall.%s' % (StationName,'Snowfall', f), 
     dpi=None, facecolor='w', edgecolor='b', orientation='portrait', 
     papertype=None, format=None, transparent=False, bbox_inches=None, 
     pad_inches=0.1, frameon=None)
@@ -528,8 +536,8 @@ ax.text(.5, 1.1, 'Station: %s' % (StationName), verticalalignment='center',
     fontweight=None, color='black')
 fig.subplots_adjust(top=0.85)
 ax.set_xlabel('Hydro Year')
-ax.set_ylabel('Length of Snow Season (Days)')
-ax.set_title('Days Per Snow Season', fontweight='bold')
+ax.set_ylabel('Days')
+ax.set_title('Length of Snow Seasons', fontweight='bold')
 plt.plot(x,SeasonLen,  '-')
 slope, intercept, r_value, p_value, std_err = stats.linregress(x[mask],SeasonLen[mask])
 plt.plot(x,intercept+slope*x, 'r')
@@ -541,7 +549,7 @@ FinalData.append(p_value)
 # print ('P value for Extreme Snow Events is: %f' % p_value)
 # print ('Slope for Extreme Events: %f' % slope)
 # plt.show()
-plt.savefig('%s/SnowSeasonLen.%s' % (StationName, f), dpi=None, 
+plt.savefig('%s/%s/SnowSeasonLen.%s' % (StationName,'Snowfall', f), dpi=None, 
     facecolor='w', edgecolor='b', orientation='portrait', papertype=None, 
     format=None, transparent=False, bbox_inches=None, pad_inches=0.1, 
     frameon=None)
@@ -571,7 +579,7 @@ FinalData.append(p_value)
 # print ('P value for Extreme Snow Events is: %f' % p_value)
 # print ('Slope for Extreme Events: %f' % slope)
 # plt.show()
-plt.savefig('%s/Extreme_Events.%s' % (StationName, f), dpi=None, 
+plt.savefig('%s/%s/Extreme_Events.%s' % (StationName,'Snowfall', f), dpi=None, 
     facecolor='w', edgecolor='b', orientation='portrait', papertype=None, 
     format=None, transparent=False, bbox_inches=None, pad_inches=0.1, 
     frameon=None)
@@ -602,7 +610,7 @@ FinalData.append(p_value)
 # print (slope)
 # print (p_value)
 # plt.show()
-plt.savefig('%s/Snow_Days_Annual.%s' % (StationName, f))
+plt.savefig('%s/%s/Snow_Days_Annual.%s' % (StationName,'Snowfall', f))
 plt.close()
 ##****************Annual Snowfall
 mask = ~np.isnan(x) & ~np.isnan(YSFarray)
@@ -630,7 +638,7 @@ FinalData.append(p_value)
 # plt.show()
 # print (slope)
 # print (p_value)
-plt.savefig('%s/AnnualTotals_mm.%s' % (StationName, f))
+plt.savefig('%s/%s/AnnualTotals_mm.%s' % (StationName,'Snowfall', f))
 plt.close()
 ##************** Standard Dev
 mask = ~np.isnan(x) & ~np.isnan(AnnualStandardDev)
@@ -656,7 +664,7 @@ FinalData.append(p_value)
 # print ('Slope for Standard Dev: %f' % slope)
 # print (slope)
 # print (p_value)
-plt.savefig('%s/Annual_Average_Daily_STD.%s' % (StationName, f))
+plt.savefig('%s/%s/Annual_Average_Daily_STD.%s' % (StationName,'Snowfall', f))
 
 # plt.show()
 plt.close()
@@ -668,6 +676,7 @@ plt.close()
 # Data gap can mean no winter data was available or all records were 0.0.
 
 if MissYearCount>0:
+    os.makedirs(os.path.join(StationName, 'ErrorData'))
     print ("*******************%i Data Gap(s) Identified******************" % (MissYearCount))
     print ("Years Missing: %s\n " % (MissingHydroY))
 
@@ -766,7 +775,7 @@ if MissYearCount>0:
                         plt.legend(loc='right')
                         plt.text(1, 32, 'Total Record Coverage For Study Period: %f' % 
                             (PercentRCov), verticalalignment='top') 
-                        plt.savefig('%s/MissingWinterDataYear%i.%s' % (StationName, year, f), dpi=None, 
+                        plt.savefig('%s/%s/MissingWinterDataYear%i.%s' % (StationName,'ErrorData', year, f), dpi=None, 
                             facecolor='w', edgecolor='b', orientation='portrait', papertype=None, 
                             format=None, transparent=False, bbox_inches=None, pad_inches=0.1, 
                             frameon=None)
@@ -801,7 +810,7 @@ if MissYearCount>0:
                         plt.legend(loc='right')
                         plt.text(1, 32, 'Total Record Coverage For Study Period: %f' % 
                             (PercentRCov), verticalalignment='top') 
-                        plt.savefig('%s/MissingWinterDataYear%i.%s' % (StationName, year, f), dpi=None, 
+                        plt.savefig('%s/%s/MissingWinterDataYear%i.%s' % (StationName,'ErrorData', year, f), dpi=None, 
                             facecolor='w', edgecolor='b', orientation='portrait', papertype=None, 
                             format=None, transparent=False, bbox_inches=None, pad_inches=0.1, 
                             frameon=None)
@@ -813,7 +822,7 @@ if MissYearCount>0:
         i=0
 
 # print len(ZeroSnowYears)
-print ("END Of Snowfall Anlysis")
+print ("END of Snowfall Analysis")
 
 ########
 # List of stuff for possible future use

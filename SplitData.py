@@ -25,6 +25,10 @@ else:
     shutil.rmtree(dir)
     os.makedirs(dir)
 
+subfolder_names = ['Data_Coverage']
+for subfolder_name in subfolder_names:
+    os.makedirs(os.path.join(StationName, subfolder_name))
+
 #DATA FORMAT: [Date, Precip, Snow, Tmax, Tmin, TOBS]
 # This section does not remove any records. Only converts available data to float.
 allData = []
@@ -148,7 +152,7 @@ plt.ylabel('Percentage of Coverage')
 plt.title('Month Coverage Over Study Period')
 plt.text(1, 1.04, 'Total Record Coverage For Study Period: %f' % 
     (PercentRCov), verticalalignment='top') 
-plt.savefig('%s/MissingMonthsData.%s' % (StationName, f), dpi=None, 
+plt.savefig('%s/%s/MissingMonthsData.%s' % (StationName, 'Data_Coverage', f), dpi=None, 
     facecolor='w', edgecolor='b', orientation='portrait', papertype=None, 
     format=None, transparent=False, bbox_inches=None, pad_inches=0.1, 
     frameon=None)
@@ -195,7 +199,7 @@ plt.ylabel('Missing Records')
 plt.title('Missing Temperature Records Per Hydro Year')
 plt.text(1, Xplace, 'Percent Coverage For Study Period: %f' % 
     (PercentRCov), verticalalignment='top') 
-plt.savefig('%s/MissingTempData.%s' % (StationName, f), dpi=None, 
+plt.savefig('%s/%s/MissingTempData.%s' % (StationName,'Data_Coverage', f), dpi=None, 
     facecolor='w', edgecolor='b', orientation='portrait', papertype=None, 
     format=None, transparent=False, bbox_inches=None, pad_inches=0.1, 
     frameon=None)
@@ -243,7 +247,7 @@ plt.ylabel('Missing Records')
 plt.title('Missing Snowfall Records Per Hydro Year')
 plt.text(1, Xplace, 'Percent Coverage For Study Period: %f' % 
     (PercentRCov), verticalalignment='top') 
-plt.savefig('%s/MissingSnowData.%s' % (StationName, f), dpi=None, 
+plt.savefig('%s/%s/MissingSnowData.%s' % (StationName,'Data_Coverage', f), dpi=None, 
     facecolor='w', edgecolor='b', orientation='portrait', papertype=None, 
     format=None, transparent=False, bbox_inches=None, pad_inches=0.1, 
     frameon=None)
@@ -286,7 +290,7 @@ plt.ylabel('Missing Records')
 plt.title('Missing Rain Records Per Hydro Year')
 plt.text(1, Xplace, 'Percent Coverage For Study Period: %f' % 
     (PercentRCov), verticalalignment='top') 
-plt.savefig('%s/MissingRainData.%s' % (StationName, f), dpi=None, 
+plt.savefig('%s/%s/MissingRainData.%s' % (StationName, 'Data_Coverage', f), dpi=None, 
     facecolor='w', edgecolor='b', orientation='portrait', papertype=None, 
     format=None, transparent=False, bbox_inches=None, pad_inches=0.1, 
     frameon=None)
@@ -297,3 +301,5 @@ plt.close()
 for aRow in RawData:
     if aRow[-5]!=0.0 and aRow[-5] != "":
         TempDataIndex.append(aRow[:])
+
+print "END of SplitData"

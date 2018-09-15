@@ -8,7 +8,7 @@ Python 2.7
   5. Compare temperatures with snowfall extremes/frequency
   6. Check for correlations over time.
   
-###### Instructions:
+###### Requirements:
 This program requires python 2.7.
 
 *Download => https://www.python.org/download/releases/2.7/

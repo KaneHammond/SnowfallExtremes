@@ -1,5 +1,33 @@
 import pandas as pd
 import sys
+try:
+    try:
+        import pandas as pd
+    except:
+        import pip
+        pip.main(['install','pandas'])
+        import pandas as pd
+except:
+    try:
+        import pandas as pd
+    except:
+        subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'pandas', 'PyYAML==3.11'])
+        import pandas as pd
+
+try:
+    try:
+        import sys
+    except:
+        import pip
+        pip.main(['install','sys'])
+        import sys
+except:
+    try:
+        import sys
+    except:
+        subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'sys', 'PyYAML==3.11'])
+        import sys
+        
 sys.path.append("DataModules")
 # import ImportFTP
 # ImportFTP

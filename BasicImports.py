@@ -3,12 +3,29 @@ import sys
 import os
 import shutil
 import copy
+import subprocess
+# try:
+#     import datetime
+# except:
+#     import pip
+#     pip.main(['install','datetime'])
+#     import datetime
+
+# Test this method
 try:
-    import datetime
+    try:
+        import datetime
+    except:
+        import pip
+        pip.main(['install','datetime'])
+        import datetime
 except:
-    import pip
-    pip.main(['install','datetime'])
-    import datetime
+    try:
+        import datetime
+    except:
+        subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'datetime', 'PyYAML==3.11'])
+        import datetime
+
 from datetime import timedelta
 from datetime import datetime
 

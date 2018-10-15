@@ -13,6 +13,8 @@ except:
     import pip
     pip.main(['install','tqdm'])
     import tqdm
+import tqdm
+import time
 import copy
 
 sys.path.append("Output")
@@ -605,14 +607,16 @@ def dly_to_csv(ftp, station_id, State):
         # print('Record Missing Element(s)')
         pass
 
-print ('Downloading Data')
+
 
 i = 0
 ftp = connect_to_ftp()
-for aItem in dfList:
-    station_id = aItem
-    State = df2[i] 
-    dly_to_csv(ftp, station_id, State)
+print ('Downloading Data')
+ProgBarLimit = len(dfList)
+ftp = connect_to_ftp()
+for i in tqdm.tqdm(range(ProgBarLimit)):
+    station_id = dfList[i]
+    dly_to_csv(ftp, station_id)
     i = i+1
 
 ftp.quit()

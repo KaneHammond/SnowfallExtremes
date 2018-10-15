@@ -7,6 +7,8 @@ import csv
 import io
 import numpy as np
 import copy
+import tqdm
+import time
 sys.path.append("Output")
 sys.path.append("TXT_FILES")
 
@@ -526,11 +528,12 @@ def dly_to_csv(ftp, station_id):
         pass
 
 print ('Downloading Data')
-
+ProgBarLimit = len(dfList)
 ftp = connect_to_ftp()
-for aItem in dfList:
-    station_id = aItem
+for i in tqdm.tqdm(range(ProgBarLimit)):
+    station_id = dfList[i]
     dly_to_csv(ftp, station_id)
+    i = i+1
 
 ftp.quit()
 sys.exit()

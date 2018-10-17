@@ -199,6 +199,12 @@ def SnowFallAnalysis(StationName, SnowData, RawData, SE, f, StationExports, Dayx
         TempVar = EndDates[i]-StartDates[i]
         TempVar = TempVar.days+1
         SeasonLen.append(TempVar)
+        # SeasonLen = int(SeasonLen)
+        if TempVar>365:
+            print EndDates[i]
+            print StartDates[i]
+            print TempVar
+            sys.exit()
         i = i+1
     if len(SeasonLen)!=len(StartDates):
         print (" \n******Error Calculating Snow Season Length****** \n")

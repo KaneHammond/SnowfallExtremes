@@ -298,15 +298,35 @@ def get_station_id(ftp):
     try:
         query = input('Enter selection (ex. 001, 42): ')
         query = int(query)
+        Name.append(df.loc[query, 'STATION_NAME'])
     except:
         print('Please enter valid selection (ex. 001, 42)')
         sys.exit()
 
     station_id = df.loc[query, 'STATION_ID']
     return station_id
-
+# Define list to append station name to. Needed to ensure
+# its returned from the def.
+Name = []
 ftp = connect_to_ftp()
 station_id = get_station_id(ftp)
 print(station_id)
 dly_to_csv(ftp, station_id)
 ftp.quit()
+# Define variables for the station info csv. This is for the
+# Snowfall program to read, allowing it to identify the location
+# of the data file.
+Header = 'STATION_ID'
+Station = [station_id]
+Station.insert(0, Header)
+# Change the variable Name from list to an individual string item.
+Name = Name[0]
+Station.insert(-1, Name)
+
+with open("Output/Station/StationInformation.csv", "w") as fp:
+    a = csv.writer(fp, delimiter=',', lineterminator='\n')
+    data = Station
+    print data
+    # for aRow in data:
+    #     print aRow
+    a.writerow(data)

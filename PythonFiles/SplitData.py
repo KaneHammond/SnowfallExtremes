@@ -1,6 +1,6 @@
 
 from BasicImports import *
-def Split_Data(Data, StationName, f, FirstYear, SnowData, RawData, BaseData, MonthX, DayX, StationExports):
+def Split_Data(Data, StationName, f, FirstYear, SnowData, RawData, BaseData, MonthX, DayX, StationExports, OmitYearsT):
     # This File processes raw data for analysis
     # by removing records without snowfall and 
     # defining hydrological years.
@@ -253,8 +253,9 @@ def Split_Data(Data, StationName, f, FirstYear, SnowData, RawData, BaseData, Mon
     # ***************************Missing Temperature Analysis
     # ***************************Missing Temperature Analysis
     # ***************************Missing Temperature Analysis
+    # WORK
     MissingTempData = [] # Dataset containing count of missing records per year
-    Tx = [] # The x axis value set off hydro years
+    Tx = [] # The x axis value set on hydro years
     Temp = 0
     HY = RawData[0][-1] # Hydro Year
 
@@ -274,21 +275,36 @@ def Split_Data(Data, StationName, f, FirstYear, SnowData, RawData, BaseData, Mon
     Tx.append(HY)
     MissingTempData.append(Temp)
 
+    # Define years missing data to omit from annual averages
+    temp = 0
+    i = 0
+    for aRow in MissingTempData:
+        i = i+1
+        aRow = float(aRow)
+        temp = aRow/365
+        if temp >= 0.5:
+            OmitYearsT.append(Tx[i])
+
     # Write data for missing years. Estimates missing 365 records per
-    # year. Overwrites leap years of 366 as 365 (not considered significant)
+    # year. Ignores leap years of 366 as 365 (not considered significant)
     temp = set(Tx).symmetric_difference(set(FullHY))
     temp = list(temp)
-    # Write a value of 365 for each year missing
+
+    # Write a value of 365 for each year missing.
+    # If nan inserts do not fail, no manual inserts will be required.
     MissingYears = []
     for aRow in temp:
         MissingYears.append(365)
+
     # Write dataframes for missing years and data covereage within 
     # present records.
     df = pd.DataFrame({"a" : MissingYears, "b" : temp})
     df2 = pd.DataFrame({"a" : MissingTempData, "b" : Tx})
+
     # Combine these based upon hydro year.
     Tdf = pd.merge(df, df2, how='outer')
     Tdf = Tdf.sort_values('b')
+
     # Write these columns to list (order will be sorted in graph)
     MissingTempData = Tdf['a'].values.tolist()
     Tx = Tdf['b'].values.tolist()

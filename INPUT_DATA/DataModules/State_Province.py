@@ -285,7 +285,7 @@ Inventory(ftp)
 # Filter through start dates, selecting start dates that are at least
 # the given value from the query.
 print ('*'*25)
-query = input('Identify Latest Start Date (YYYY):')
+query = input('Identify Start Date (YYYY):')
 query = int(query)
 Filter2 = []
 for aRow in Filter:
@@ -298,7 +298,7 @@ for aRow in Filter:
 # the given value from the query.
 Filter = []
 print ('*'*25)
-query = input('Identify Earliest End Date (YYYY):')
+query = input('Identify End Date (YYYY):')
 query = int(query)
 for aRow in Filter2:
     aRow[-1] = int(aRow[-1])
@@ -616,7 +616,8 @@ ProgBarLimit = len(dfList)
 ftp = connect_to_ftp()
 for i in tqdm.tqdm(range(ProgBarLimit)):
     station_id = dfList[i]
-    dly_to_csv(ftp, station_id)
+    State = df2[i]
+    dly_to_csv(ftp, station_id, State)
     i = i+1
 
 ftp.quit()

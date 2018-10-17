@@ -5,21 +5,21 @@ import shutil
 import copy
 import subprocess
 
-try:
-    try:
-        import datetime
-    except:
-        subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'datetime', 'PyYAML==3.11'])
-        import datetime
-    try:
-        subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'datetime', 'PyYAML==3.11'])
-        import datetime
-    except:
-        pip install --ignore-installed six datetime
-        import datetime
-except:
-    print('Unable to install datetime through pip. Try sudo command')       
-
+# try:
+#     try:
+#         import datetime
+#     except:
+#         subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'datetime', 'PyYAML==3.11'])
+#         import datetime
+#     try:
+#         subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'datetime', 'PyYAML==3.11'])
+#         import datetime
+#     except:
+#         pip install --ignore-installed six datetime
+#         import datetime
+# except:
+#     print('Unable to install datetime through pip. Try sudo command')       
+import datetime
 from datetime import timedelta
 from datetime import datetime
 

@@ -4,14 +4,7 @@ import os
 import shutil
 import copy
 import subprocess
-# try:
-#     import datetime
-# except:
-#     import pip
-#     pip.main(['install','datetime'])
-#     import datetime
 
-# Test this method
 try:
     try:
         import datetime

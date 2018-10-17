@@ -91,7 +91,7 @@ if query == 2:
 # Prompt options for analysis
 print ('*'*25)
 query = input('Select CDF Limit For Snowfall Extremes (i.e. 0.95):')
-SE = int(query)
+SE = float(query)
 print ('*'*25)
 query = raw_input('Define File Extention For Saved Figures (i.e. pdf):')
 f = str(query)

@@ -426,30 +426,36 @@ def Temperature (RawData, StationName, f, BaseData, StationExports, OmitYearsT):
     i = RawData[0][-1]
     z = 0
     for aRow in RawData:
-        if aRow[-1]!=OmitYearsT[z]:
-            if aRow[-1]==i:
-                if np.isnan(aRow[-3]) != True and np.isnan(aRow[-4]) != True:
-                    ave = (aRow[-3]+aRow[-4])/2
-                    TemperTemp.append(ave)
-            if aRow[-1]!=i:
-                if len(TemperTemp)==0:
-                    AnnualSTD.append(np.nan)
-                    AnnualAve.append(np.nan)
-                if len(TemperTemp)!=0:
-                    AnnualSTD.append(np.std(TemperTemp))
-                    AnnualAve.append(np.mean(TemperTemp))
-                AnnualYears.append(i)
-                i = aRow[-1]
-                TemperTemp=[]
-                if np.isnan(aRow[-3]) != True and np.isnan(aRow[-4]) != True:
-                    ave = (aRow[-3]+aRow[-4])/2
-                    TemperTemp.append(ave)
-        if z!=len(OmitYearsT)-1:
-            if aRow[-1]==OmitYearsT[z]:
-                AnnualSTD.append(np.std(np.nan))
-                AnnualAve.append(np.mean(np.nan))
-                AnnualYears.append(i)
-                z = z+1         
+        # if aRow[-1]!=OmitYearsT[z]:
+        if aRow[-1]==i:
+            if np.isnan(aRow[-3]) != True and np.isnan(aRow[-4]) != True:
+                ave = (aRow[-3]+aRow[-4])/2
+                TemperTemp.append(ave)
+        if aRow[-1]!=i:
+            if len(TemperTemp)==0:
+                AnnualSTD.append(np.nan)
+                AnnualAve.append(np.nan)
+            if len(TemperTemp)!=0:
+                AnnualSTD.append(np.std(TemperTemp))
+                AnnualAve.append(np.mean(TemperTemp))
+            AnnualYears.append(i)
+            i = aRow[-1]
+            TemperTemp=[]
+            if np.isnan(aRow[-3]) != True and np.isnan(aRow[-4]) != True:
+                ave = (aRow[-3]+aRow[-4])/2
+                TemperTemp.append(ave)
+        # WORK WORK WORK
+        # Check for OmitYears to pass as nan
+        # if aRow[-1]==OmitYearsT[z]:
+        #     # print OmitYearsT[z]
+        #     AnnualSTD.append(np.std(np.nan))
+        #     AnnualAve.append(np.mean(np.nan))
+        #     AnnualYears.append(i)
+        #     print i
+        #     print aRow
+        #     sys.exit()
+        #     if z<len(OmitYearsT)-1:
+        #         z = z+1         
     AnnualSTD.append(np.std(TemperTemp))
     AnnualAve.append(np.mean(TemperTemp))
     AnnualYears.append(i)

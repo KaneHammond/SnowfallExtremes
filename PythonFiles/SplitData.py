@@ -276,14 +276,17 @@ def Split_Data(Data, StationName, f, FirstYear, SnowData, RawData, BaseData, Mon
     MissingTempData.append(Temp)
 
     # Define years missing data to omit from annual averages
+    # WORK WORK
     temp = 0
     i = 0
     for aRow in MissingTempData:
-        i = i+1
         aRow = float(aRow)
         temp = aRow/365
-        if temp >= 0.5:
+        # Anything greater than 100 years
+        if temp >= 0.2739:
             OmitYearsT.append(Tx[i])
+        i = i+1
+
 
     # Write data for missing years. Estimates missing 365 records per
     # year. Ignores leap years of 366 as 365 (not considered significant)

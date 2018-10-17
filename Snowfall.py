@@ -5,23 +5,25 @@ sys.path.append("PythonFiles")
 sys.path.append("INPUT_DATA")
 sys.path.append("INPUT_DATA/Output")
 
-# # Determine data location based upon data download method
-# FilterOptions = ['Country', 'Station/City', 'State/Province', 'Coordinates']
-# df = pd.DataFrame(FilterOptions,index=[1, 2, 3, 4], columns = ["SELECTION PARAMETERS"])
-# print df
-# print(' \n**********CHOOSE DATA SELECTION METHOD**********\n ')
-# selection = 'INDEX'           
-# Data = 'SELECTION PARAMETERS'
-# query = input('Which method was used to download the data?:')
-# query = int(query)
+# Determine data location based upon data download method
+FilterOptions = ['Country', 'Station/City', 'State/Province', 'Coordinates']
+df = pd.DataFrame(FilterOptions,index=[1, 2, 3, 4], columns = ["SELECTION PARAMETERS"])
+print df
+print(' \n**********CHOOSE DATA SELECTION METHOD**********\n ')
+selection = 'INDEX'           
+Data = 'SELECTION PARAMETERS'
+query = input('Which method was used to download the data?:')
+query = int(query)
+
+# # Autorun
+# query = 2
 
 # Write main output folder
 dir = 'Output'
 if not os.path.exists(dir):
     os.makedirs(dir)
 
-# Autorun
-query = 2
+
 
 # Return csv of stations from query.
 if query>4 or query < 0:
@@ -85,22 +87,22 @@ if query == 2:
   Stations = Data[-1]
   Name = Data[1]
 
-# Autorun
-SE = 0.95
-f = 'pdf'
-FirstYear = 1950
+# # Autorun
+# SE = 0.95
+# f = 'pdf'
+# FirstYear = 1950
 
 # Prompt options for analysis
-# print ('*'*25)
-# query = input('Select CDF Limit For Snowfall Extremes (i.e. 0.95):')
-# SE = int(query)
-# print ('*'*25)
-# query = raw_input('Define File Extention For Saved Figures (i.e. pdf):')
-# f = str(query)
-# print ('*'*25)
-# query = input('Define Starting Year for Analysis (YYYY):')
-# FirstYear = int(query)
-# print ('*'*25)
+print ('*'*25)
+query = input('Select CDF Limit For Snowfall Extremes (i.e. 0.95):')
+SE = int(query)
+print ('*'*25)
+query = raw_input('Define File Extention For Saved Figures (i.e. pdf):')
+f = str(query)
+print ('*'*25)
+query = input('Define Starting Year for Analysis (YYYY):')
+FirstYear = int(query)
+print ('*'*25)
 
 # Not Written in as an option yet. This selects day and month to parse
 # the data by. 

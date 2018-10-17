@@ -56,10 +56,6 @@ if query==4:
   print('Currently Unavailable')
   sys.exit()
 
-# Write the main output file to append to
-# MainOutput1 = open("TotalOutSO.csv", "w")
-# MainOutput1.close()
-
 # Define lists of variables to be indexed and used for 
 # the looping analysis
 Path = 0
@@ -131,6 +127,7 @@ for i in tqdm.tqdm(range(ProgBarLimit)):
     StationExports.append(Long[i])
     StationName = Name[i]
     StationExports.append(Stations[i])
+    State = Country[i]
   if Path == 2:
     StationExports.append(Stations)
     StationExports.append('null')
@@ -147,6 +144,7 @@ for i in tqdm.tqdm(range(ProgBarLimit)):
     StationExports.append(Long[i])
     StationName = StationNames[i]
     StationExports.append(Stations[i])
+    State = States[i]
   # Select stations from state folders using StationInformation.csv
   # State = States[i]
   # Read specific station (Stations[i]=Station) at given state path

@@ -71,7 +71,6 @@ if query == 3:
 if query == 1:
   Path = 1
   Stations = allStations['STATION_ID'].tolist()
-  States = allStations['STATE'].tolist()
   StationNames = allStations['STATION_NAME'].tolist()
   Country = allStations['COUNTRY_CODE'].tolist()
   Elevation = allStations['ELEVATION'].tolist()
@@ -127,7 +126,7 @@ for i in tqdm.tqdm(range(ProgBarLimit)):
     StationExports.append(Long[i])
     StationName = Name[i]
     StationExports.append(Stations[i])
-    State = Country[i]
+    State = States[i]
   if Path == 2:
     StationExports.append(Stations)
     StationExports.append('null')
@@ -144,7 +143,7 @@ for i in tqdm.tqdm(range(ProgBarLimit)):
     StationExports.append(Long[i])
     StationName = StationNames[i]
     StationExports.append(Stations[i])
-    State = States[i]
+    State = Country[i]
   # Select stations from state folders using StationInformation.csv
   # State = States[i]
   # Read specific station (Stations[i]=Station) at given state path

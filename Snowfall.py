@@ -5,18 +5,18 @@ sys.path.append("PythonFiles")
 sys.path.append("INPUT_DATA")
 sys.path.append("INPUT_DATA/Output")
 
-# Determine data location based upon data download method
-FilterOptions = ['Country', 'Station/City', 'State/Province', 'Coordinates']
-df = pd.DataFrame(FilterOptions,index=[1, 2, 3, 4], columns = ["SELECTION PARAMETERS"])
-print df
-print(' \n**********CHOOSE DATA SELECTION METHOD**********\n ')
-selection = 'INDEX'           
-Data = 'SELECTION PARAMETERS'
-query = input('Which method was used to download the data?:')
-query = int(query)
+# # Determine data location based upon data download method
+# FilterOptions = ['Country', 'Station/City', 'State/Province', 'Coordinates']
+# df = pd.DataFrame(FilterOptions,index=[1, 2, 3, 4], columns = ["SELECTION PARAMETERS"])
+# print df
+# print(' \n**********CHOOSE DATA SELECTION METHOD**********\n ')
+# selection = 'INDEX'           
+# Data = 'SELECTION PARAMETERS'
+# query = input('Which method was used to download the data?:')
+# query = int(query)
 
-# # Autorun
-# query = 2
+# Autorun
+query = 2
 
 # Write main output folder
 dir = 'Output'
@@ -58,6 +58,7 @@ if query==4:
 
 # Define lists of variables to be indexed and used for 
 # the looping analysis
+# print allStations
 Path = 0
 if query == 3:
   Path = 3
@@ -71,9 +72,9 @@ if query == 3:
 if query == 1:
   Path = 1
   Stations = allStations['STATION_ID'].tolist()
-  StationNames = allStations['STATION_NAME'].tolist()
+  # StationNames = allStations['STATION_NAME'].tolist()
   Country = allStations['COUNTRY_CODE'].tolist()
-  Elevation = allStations['ELEVATION'].tolist()
+  Elevation = allStations['Unnamed: 0'].tolist()
   Lat = allStations['LATITUDE'].tolist()
   Long = allStations['LONGITUDE'].tolist()
 if query == 2:
@@ -82,22 +83,22 @@ if query == 2:
   Stations = Data[-1]
   Name = Data[1]
 
-# # Autorun
-# SE = 0.95
-# f = 'pdf'
-# FirstYear = 1950
+# Autorun
+SE = 0.95
+f = 'pdf'
+FirstYear = 1950
 
-# Prompt options for analysis
-print ('*'*25)
-query = input('Select CDF Limit For Snowfall Extremes (i.e. 0.95):')
-SE = float(query)
-print ('*'*25)
-query = raw_input('Define File Extention For Saved Figures (i.e. pdf):')
-f = str(query)
-print ('*'*25)
-query = input('Define Starting Year for Analysis (YYYY):')
-FirstYear = int(query)
-print ('*'*25)
+# # Prompt options for analysis
+# print ('*'*25)
+# query = input('Select CDF Limit For Snowfall Extremes (i.e. 0.95):')
+# SE = float(query)
+# print ('*'*25)
+# query = raw_input('Define File Extention For Saved Figures (i.e. pdf):')
+# f = str(query)
+# print ('*'*25)
+# query = input('Define Starting Year for Analysis (YYYY):')
+# FirstYear = int(query)
+# print ('*'*25)
 
 # Not Written in as an option yet. This selects day and month to parse
 # the data by. 
@@ -119,14 +120,14 @@ for i in tqdm.tqdm(range(ProgBarLimit)):
   BaseData = []
   StationExports = []
   if Path == 1:
-    StationExports.append(States[i])
+    StationExports.append('null')
     StationExports.append(Country[i])
     StationExports.append(Elevation[i])
     StationExports.append(Lat[i])
     StationExports.append(Long[i])
-    StationName = Name[i]
+    StationName = Stations[i]
     StationExports.append(Stations[i])
-    State = States[i]
+    State = Country[i]
   if Path == 2:
     StationExports.append(Stations)
     StationExports.append('null')
@@ -143,7 +144,7 @@ for i in tqdm.tqdm(range(ProgBarLimit)):
     StationExports.append(Long[i])
     StationName = StationNames[i]
     StationExports.append(Stations[i])
-    State = Country[i]
+    State = States[i]
   # Select stations from state folders using StationInformation.csv
   # State = States[i]
   # Read specific station (Stations[i]=Station) at given state path
@@ -381,9 +382,8 @@ if len(CheckRecords)>0:
   if Path != 2:
     with open("Output/ERROR_STATIONS.csv", "w") as fp:
       a = csv.writer(fp, delimiter=',', lineterminator='\n')
-      FinalData.insert(0, Stations)
       data = CheckRecords
-      a.writerows(data)
+      a.writerow(data)
 
 
 

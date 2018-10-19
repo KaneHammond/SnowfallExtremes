@@ -173,8 +173,7 @@ def dly_to_csv(ftp, station_id):
     '''
     # https://stackoverflow.com/a/40435354
     df_all = df_all.loc[:,~df_all.columns.duplicated()]
-    df_all = df_all.loc[df_all['ID'].notnull(), :]
-    # print df_all # Missing Data at this point
+
     
     '''
     Output to CSV, convert everything to strings first
@@ -326,7 +325,7 @@ Station.insert(-1, Name)
 with open("Output/Station/StationInformation.csv", "w") as fp:
     a = csv.writer(fp, delimiter=',', lineterminator='\n')
     data = Station
-    print data
+    # print data
     # for aRow in data:
     #     print aRow
     a.writerow(data)

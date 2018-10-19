@@ -1,4 +1,3 @@
-
 from BasicImports import *
 def Split_Data(Data, StationName, f, FirstYear, SnowData, RawData, BaseData, MonthX, DayX, StationExports, OmitYearsT):
     # This File processes raw data for analysis
@@ -341,6 +340,7 @@ def Split_Data(Data, StationName, f, FirstYear, SnowData, RawData, BaseData, Mon
     # ***************************Missing Snowfall Data
     # ***************************Missing Snowfall Data
     # ***************************Missing Snowfall Data
+    # WORK
     MissingSnowData = [] # Dataset containing count of missing records per year
     Sx = [] # The x axis value set of hydro years
     Temp = 0

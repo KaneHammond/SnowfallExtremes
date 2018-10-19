@@ -147,16 +147,26 @@ def countries(ftp):
     df = pd.read_fwf(local_full_path, widths=widths, names=names, dtype=dtype, header=None)
     print ('*'*25)
     # Query for country selection (multiple values), must be separated 
-    # by ', ' to meet requirements.
+    # by ',' to meet requirements.
     query = raw_input('View List of Available Countries(Y/N):')
     query = query.upper()
     if query=='Y':
         print_full(df)
     print ('*'*25)
     print('Enter Country Code(s):')
-    a = [str(x) for x in raw_input().upper().split(', ')]
+    a = [str(x) for x in raw_input().upper().split(',')]
     print('')
     print('Searching records...\n')
+    
+    CCs = df['CODE'].values.tolist()
+
+    for aItem in a:
+        if len(aItem)>2:
+            print('%s Not Found' % (aItem))
+            sys.exit()
+        if aItem not in CCs:
+            print('%s Not Found' % (aItem))
+            sys.exit()
     i=0
     # Loop though the query to identify countries if variables are missing.
     # Does not work if too many variables are provided (USA vs US). Only 2
@@ -287,7 +297,7 @@ print ('Total Stations in Selection: %i' % (len(Stations.index)))
 print ('Specification of Elements May Reduce Total Stations')
 print ('*'*25)
 print('Select Elements(ex. 001, 1):')
-a = [str(x) for x in raw_input().upper().split(', ')]
+a = [str(x) for x in raw_input().upper().split(',')]
 element_list = []
 for aItem in a:
     aItem = int(aItem)

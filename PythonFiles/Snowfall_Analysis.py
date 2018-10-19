@@ -1,6 +1,11 @@
 from BasicImports import *
 
 def SnowFallAnalysis(StationName, SnowData, RawData, SE, f, StationExports, Dayx, MonthX):
+    
+    # This ignores all numpy errors. Used to ignore NaN errors.
+    # Implemented since NaN values are used to fill empty data.
+    np.warnings.filterwarnings('ignore')
+    
     dir = 'Output/'+StationName+'/Snowfall'
     if not os.path.exists(dir):
         os.makedirs('Output/'+StationName+'/Snowfall')
@@ -10,7 +15,7 @@ def SnowFallAnalysis(StationName, SnowData, RawData, SE, f, StationExports, Dayx
     #*****************************************Snow only index****************
     #Format [Year, DD, MM, Precip, Snow, Tmax, Tmin, TOBS, Hydro Year]
     # The imported list contains no blank ("") snow records. 
-    allData = copy.deepcopy(SnowData)
+    allData = copy.deepcopy(RawData)
     #*********************************COUNT SNOWDAYS AND TOTAL****************
 
     # These values can be used to compare the sum of parsed data
@@ -25,7 +30,7 @@ def SnowFallAnalysis(StationName, SnowData, RawData, SE, f, StationExports, Dayx
     # print ("The total number of snow days is: %i" %(TotalnumbSnowDays))
     # print ("The total snow for study period is: %i" %(TotalSnow))
 
-    #*************************Annual snowdays (Hydro Year)************************
+    #*************************Annual snowdays/snowfall/std************************
 
     # DataCheck: If value is 1, that represents one period with missing records.
     # Values only represent number of times records skip, not the number of 
@@ -38,15 +43,8 @@ def SnowFallAnalysis(StationName, SnowData, RawData, SE, f, StationExports, Dayx
     # for each record in that year. Then the stats for records per year can be calculated.
     jin = []
     for aRow in allData:
-        prevRow = aRow
-        jin.append(j)
-        if aRow[-1]==j: 
-            pass
-        if aRow[-1]==j+1:
-            j = j+1
-        if aRow[-1]>j+1:
-            j = aRow[-1]
-            DataCheck = 0
+        if aRow[-5]>0.0 and np.isnan(aRow[-5]) != True:
+            jin.append(aRow[-1])
     # Function to count snowfall records <0 per year.
     # It lists the hydro year for each record. The total times the hydro
     # year occurs in the dataset (values), is equal to the total snowdays
@@ -55,137 +53,138 @@ def SnowFallAnalysis(StationName, SnowData, RawData, SE, f, StationExports, Dayx
     StudyYearList = copy.deepcopy(Count.keys())
     snowDays = copy.deepcopy(Count.values())
 
-    # Check sum to ensure no skipped records
-    TotalSDcheck = sum(snowDays)
-    if TotalSDcheck-TotalnumbSnowDays!=0:
-        temp = TotalSDcheck-TotalnumbSnowDays
-        print (" \n******Annual Snowday Miscalculation by a value of %i******\n " % (temp))
-    #**********************************Yearly Snow Totals****************
-    # Record reset at change of each hydro year. Used to count totals per year.
-    TotalAnSnowfall = 0
-    # List each annual total will be appended to.
-    AnnualSnowFall = []
-    # First hdyro year date in snowfall only set
-    j = allData[0][-1]
-    for aRow in allData:
-        if j == aRow[-1]:
-            TotalAnSnowfall=TotalAnSnowfall+aRow[-5]
-        if aRow[-1]==j+1:
-            AnnualSnowFall.append(TotalAnSnowfall)
-            j = j+1
-            TotalAnSnowfall = 0
-            TotalAnSnowfall=aRow[-5]
-        if aRow[-1]>j+1:
-            j = aRow[-1]
-            AnnualSnowFall.append(TotalAnSnowfall)
-            TotalAnSnowfall = 0
-            TotalAnSnowfall=aRow[-5]        
-    AnnualSnowFall.append(TotalAnSnowfall)
+    # Snowfall totals annual
+    # Snowfall std annual
+    # Annual Snowdays
 
-    # Check sum to ensure no skipped records
-    TotalSFcheck = sum(AnnualSnowFall)
-    if TotalSFcheck-TotalSnow!=0:
-        temp = TotalSFcheck-TotalSnow
-        print (" \n******Annual Snow Totals Miscalculation by a value of %i******\n " % (temp))
+    j = allData[0][-1]
+    SnowT = []
+    SnowY = []
+    AnnualSnowFall = []
+    AnnualSnowfallSTD = []
+    SnowCount = 0
+    SnowDays = []
+    for aRow in allData:
+        if aRow[-1]==j:
+            if aRow[-5]!=0.0:
+                SnowT.append(aRow[-5])
+                if np.isnan(aRow[-5]) != True:
+                    SnowCount = SnowCount+1
+        if aRow[-1]!=j:
+            SnowY.append(j)
+            SnowT = np.array(SnowT)
+            SnowDays.append(SnowCount)
+            SnowCount = 0
+            if np.nansum(SnowT)==0.0:
+                AnnualSnowFall.append(np.sum(SnowT))
+            if np.nansum(SnowT)!=0.0:
+                AnnualSnowFall.append(np.nansum(SnowT))
+            AnnualSnowfallSTD.append(np.nanstd(SnowT))
+            SnowT = []
+            j = j+1
+            # Check row passing year transition
+            if aRow[-5]!=0.0:
+                SnowT.append(aRow[-5])
+                if np.isnan(aRow[-5]) != True:
+                    SnowCount = SnowCount+1
+
+    SnowY.append(j)
+    if np.nansum(SnowT)==0.0:
+        AnnualSnowFall.append(np.sum(SnowT))
+    if np.nansum(SnowT)!=0.0:
+        AnnualSnowFall.append(np.nansum(SnowT))
+    AnnualSnowfallSTD.append(np.nanstd(SnowT))      
+    SnowDays.append(SnowCount)
+
+    # Treat 0 snowfall years as NaN:
+    i = 0
+    Temp = []
+    for aRow in SnowDays:
+        if aRow==0:
+            Temp.append(np.nan)
+        if aRow!=0:
+            Temp.append(aRow)
+        i = i+1
+    StudyYearList = SnowY
+
+    SnowDays = copy.deepcopy(Temp)
 
     #*********************************#Calculate Daily Averages Per Year*************
     YSFarray=np.array(AnnualSnowFall, dtype=np.float) #Defines an array of AnnualSnowFall data
-    SDarray=np.array(snowDays, dtype=np.float) #Defines an array of snowDays data
+    SDarray=np.array(SnowDays, dtype=np.float) #Defines an array of snowDays data
     DailyAverage=np.array([YSFarray/SDarray], dtype=np.float) #Daily average for a given year
 
     #*****************************Entire Study Period Standard Deviations*************
     TotalDailyAveS=np.nanmean(DailyAverage, dtype=np.float) #Calculates daily average of entire period.
     StandardDevDA = np.nanstd(DailyAverage, dtype=np.float) #Calcualtes std of total study period daily snowfall averages
-    #*****************************Annual Standard Deviation**************************
-    # List to append the standard deviation for daily snowfall per year
-    AnnualStandardDev = []
-    # Temp list to count snow amounts and run
-    YearlySnowTemporary = []
-    # First hdyro year date in snowfall only set
-    i=allData[0][-1]
-    # Count the std records equal to 0.
-    count = 0
-    # TempData is a set for full record data. Used to extract start and end dates.
-    TempData = []
-    # StartDates is a list containing records for first snowfall in a snow season.
-    StartDates = []
-    # EndDates is a list for records for final records in a snow season.
-    EndDates = []
-    # PrevRow is to assist loop function for start and end dates.
-    prevRow = []
-    # TempVar is a date conversion variable for Start and End Dates.
-    TempVar = []
+    #*****************************Start and End Dates**************************
 
+    # END AND START DATES PER SEASON
+    # print StartDates
+    # print EndDates
+    TempVar1 = 0
+    TempVar2 = 0
+    SnowRecords = []
+    TempVar = 0
+    i = 0
+    j = allData[0][-1]
+    c = 0
+    StartDates = []
+    EndDates = []
+    MissingYears = []
     for aRow in allData:
-        if aRow[-1]==i:
-            YearlySnowTemporary.append(aRow[-5])
-            TempData.append(aRow)
-        if aRow==allData[-1]:
-            YearlySnowTemporary.append(aRow[-5])
-            TempVar = TempData[0][0:3]
-            TempVar = str(TempVar)
-            TempVar = TempVar.replace(", ", "/")
-            TempVar = datetime.strptime(TempVar, '[%Y/%d/%m]')
-            StartDates.append(TempVar)
-            TempVar = TempData[-1][0:3]
-            TempVar = str(TempVar)
-            TempVar = TempVar.replace(", ", "/")
-            TempVar = datetime.strptime(TempVar, '[%Y/%d/%m]')
-            EndDates.append(TempVar)
-            x = np.nanstd(YearlySnowTemporary, dtype=np.float)
-            if x==0:
-                count = count+1
-            AnnualStandardDev.append(x)
-            TempData = []   
-        if aRow[-1]!=i:
-            x = np.nanstd(YearlySnowTemporary, dtype=np.float)
-            if x==0:
-                count = count+1
-                if len(YearlySnowTemporary)==1:
-                    TempVar = prevRow[0:3]
-                    TempVar = str(TempVar)
-                    TempVar = TempVar.replace(", ", "/")
-                    TempVar = datetime.strptime(TempVar, '[%Y/%d/%m]')
-                    StartDates.append(TempVar)
-                    TempVar = prevRow[0:3]
-                    TempVar = str(TempVar)
-                    TempVar = TempVar.replace(", ", "/")
-                    TempVar = datetime.strptime(TempVar, '[%Y/%d/%m]')
-                    EndDates.append(TempVar)
-                if len(YearlySnowTemporary)>1:
-                    TempVar = TempData[0][0:3]
-                    TempVar = str(TempVar)
-                    TempVar = TempVar.replace(", ", "/")
-                    TempVar = datetime.strptime(TempVar, '[%Y/%d/%m]')
-                    StartDates.append(TempVar)
-                    TempVar = TempData[-1][0:3]
-                    TempVar = str(TempVar)
-                    TempVar = TempVar.replace(", ", "/")
-                    TempVar = datetime.strptime(TempVar, '[%Y/%d/%m]')
-                    EndDates.append(TempVar)
-            if x!=0:
-                TempVar = TempData[0][0:3]
+        if aRow[-1]==j:
+            if aRow[-5]!=0.0 and np.isnan(aRow[-5]) != True:
+                SnowRecords.append(aRow)
+        if aRow[-1]!=j:
+            # Define prev year for missing year check
+            prevYear = j
+            j = aRow[-1]
+            # If 2 dates pass, that will identify a start and end date.
+            # This assumes it did not snow only once a year, or no days
+            # at all. 
+            if len(SnowRecords)>1:
+                c = c+1
+                TempVar = SnowRecords[0][0:3]
                 TempVar = str(TempVar)
                 TempVar = TempVar.replace(", ", "/")
                 TempVar = datetime.strptime(TempVar, '[%Y/%d/%m]')
                 StartDates.append(TempVar)
-                TempVar = TempData[-1][0:3]
+                TempVar = 0
+                TempVar = SnowRecords[-1][0:3]
                 TempVar = str(TempVar)
                 TempVar = TempVar.replace(", ", "/")
                 TempVar = datetime.strptime(TempVar, '[%Y/%d/%m]')
-                EndDates.append(TempVar)       
-            AnnualStandardDev.append(x)
-            YearlySnowTemporary = []
-            x=[]
-            i=aRow[-1]
-            YearlySnowTemporary.append(aRow[-5])
-            TempData = []
-            TempData.append(aRow)
-            prevRow = aRow
-    # if count>0:
-        # print (" \n******%i Annual Standard Deviation Records With Value of Zero****** \n " % (count))
-    if len(StartDates)-len(EndDates)!=0:
-        print (" \n******Error Defining Start and End Dates for Snow Season****** \n")
+                EndDates.append(TempVar)
+            # Insert nan if 1 record or less is found. Assumes no 
+            # winter experiences no snowfall or always at least 2 events.
+            if len(SnowRecords)<=1:
+                MissingYears.append(prevYear)
+                StartDates.append(np.nan)
+                EndDates.append(np.nan)
+
+            SnowRecords = [] 
+            if aRow[-5]!=0.0 and np.isnan(aRow[-5]) != True:
+                SnowRecords.append(aRow)
+    # Append final record once loop breaks
+    if len(SnowRecords)>1:
+        TempVar = SnowRecords[0][0:3]
+        TempVar = str(TempVar)
+        TempVar = TempVar.replace(", ", "/")
+        TempVar = datetime.strptime(TempVar, '[%Y/%d/%m]')
+        StartDates.append(TempVar)
+        TempVar = SnowRecords[-1][0:3]
+        TempVar = str(TempVar)
+        TempVar = TempVar.replace(", ", "/")
+        TempVar = datetime.strptime(TempVar, '[%Y/%d/%m]')
+        EndDates.append(TempVar)
+    if len(SnowRecords)<=1:
+        # Prev year not required for missing data check. If data
+        # is missing here, the year is the final year.
+        MissingYears.append(j)
+        StartDates.append(np.nan)
+        EndDates.append(np.nan)
+    SnowRecords = [] 
 
     #*****************************Calculate Season Length****************************
 
@@ -194,20 +193,21 @@ def SnowFallAnalysis(StationName, SnowData, RawData, SE, f, StationExports, Dayx
     # Index for while loop.
     i = 0
     # Variable for calculations.
-    TempVar = 0
+
     while i<len(StartDates):
-        TempVar = EndDates[i]-StartDates[i]
-        TempVar = TempVar.days+1
-        SeasonLen.append(TempVar)
-        # SeasonLen = int(SeasonLen)
-        if TempVar>365:
-            print EndDates[i]
-            print StartDates[i]
-            print TempVar
-            sys.exit()
+        try:
+            TempVar = (EndDates[i]-StartDates[i]).days
+            TempVar = TempVar+1
+            SnowSeasonLen.append(TempVar)
+        except:
+            if TempVar == 0:
+                SeasonLen.append(np.nan)
+        if TempVar>=365:
+            SeasonLen.append(np.nan)
+        if TempVar!=0:
+            SeasonLen.append(TempVar)
+        TempVar = 0
         i = i+1
-    if len(SeasonLen)!=len(StartDates):
-        print (" \n******Error Calculating Snow Season Length****** \n")
 
     #*********************************Season End and Start********
     # Replace years to allow for simple subtraction. The years
@@ -222,42 +222,51 @@ def SnowFallAnalysis(StationName, SnowData, RawData, SE, f, StationExports, Dayx
 
     DayStart = []
     DayEnd = []
-
+    # nan values were inserted where only one record was found.
+    # The try and except loops allow to pass through these nan values.
     for aRow in EndDates:
-        String = str(aRow)
-        Date = String[0:10]
-        Year = Date[0:4]
-        TempVar = int(Date[-5:-3])
-        if TempVar>=MonthX:
-            Date = Date.replace(Year, "1999")
-            Date = datetime.strptime(Date, '%Y-%m-%d')
-            Diff = Date-Day1
-            Diff = Diff.days
-            DayEnd.append(Diff)
-        if TempVar<=MonthX-1:
-            Date = Date.replace(Year, "2000")
-            Date = datetime.strptime(Date, '%Y-%m-%d')
-            Diff = Date-Day1
-            Diff = Diff.days
-            DayEnd.append(Diff)
+        try:
+            String = str(aRow)
+            Date = String[0:10]
+            Year = Date[0:4]
+            TempVar = int(Date[-5:-3])
+            if TempVar>=MonthX:
+                Date = Date.replace(Year, "1999")
+                Date = datetime.strptime(Date, '%Y-%m-%d')
+                Diff = Date-Day1
+                Diff = Diff.days
+                DayEnd.append(Diff)
+            if TempVar<=MonthX-1:
+                Date = Date.replace(Year, "2000")
+                Date = datetime.strptime(Date, '%Y-%m-%d')
+                Diff = Date-Day1
+                Diff = Diff.days
+                DayEnd.append(Diff)
+        except:
+            if np.isnan(aRow) == True:
+                DayEnd.append(np.nan)
 
     for aRow in StartDates:
-        String = str(aRow)
-        Date = String[0:10]
-        Year = Date[0:4]
-        TempVar = int(Date[-5:-3])
-        if TempVar>=MonthX:
-            Date = Date.replace(Year, "1999")
-            Date = datetime.strptime(Date, '%Y-%m-%d')
-            Diff = Date-Day1
-            Diff = Diff.days
-            DayStart.append(Diff)
-        if TempVar<=MonthX-1:
-            Date = Date.replace(Year, "2000")
-            Date = datetime.strptime(Date, '%Y-%m-%d')
-            Diff = Date-Day1
-            Diff = Diff.days
-            DayStart.append(Diff)
+        try:
+            String = str(aRow)
+            Date = String[0:10]
+            Year = Date[0:4]
+            TempVar = int(Date[-5:-3])
+            if TempVar>=MonthX:
+                Date = Date.replace(Year, "1999")
+                Date = datetime.strptime(Date, '%Y-%m-%d')
+                Diff = Date-Day1
+                Diff = Diff.days
+                DayStart.append(Diff)
+            if TempVar<=MonthX-1:
+                Date = Date.replace(Year, "2000")
+                Date = datetime.strptime(Date, '%Y-%m-%d')
+                Diff = Date-Day1
+                Diff = Diff.days
+                DayStart.append(Diff)
+        except:
+            if np.isnan(aRow) == True:
+                DayStart.append(np.nan)
 
     if len(DayStart)!=len(DayEnd):
         print (" \n******Error Calculating Snow Start and End Positions****** \n")
@@ -267,7 +276,8 @@ def SnowFallAnalysis(StationName, SnowData, RawData, SE, f, StationExports, Dayx
     # Write a snowfall *VALUE* only list.
     x = []
     for aRow in allData:
-        x.append(aRow[-5])
+        if aRow[-5]!=0.0 and np.isnan(aRow[-5]) != True:
+            x.append(aRow[-5])
     SnowData = copy.deepcopy(x)
     # Count the frequency of variables and
     # identify all variables in the set.
@@ -368,14 +378,13 @@ def SnowFallAnalysis(StationName, SnowData, RawData, SE, f, StationExports, Dayx
     for aRow in allData:
         records = records+1
         if aRow[-1]==StudyYearList[i]:
-            if aRow[-5] >= ValueMinS:
+            if aRow[-5] >= ValueMinS and np.isnan(aRow[-5]) != True:
                 numbevents = numbevents+1
         if aRow[-1]!=StudyYearList[i]:
             if aRow[-1]==StudyYearList[i+1]:
                 ExtremeEventsPerYearCDF.append(numbevents)
                 numbevents = 0
                 i = i+1
-                # print i
                 if aRow[-5] >= ValueMinS:
                     numbevents = numbevents+1
         if records == len(allData):
@@ -385,67 +394,8 @@ def SnowFallAnalysis(StationName, SnowData, RawData, SE, f, StationExports, Dayx
             if aRow[-5] >= ValueMinS:
                 numbevents = numbevents+1
 
-    #******************************Fill in mising hydro years********
-
-    # Defines first hydro year in RawData. If no snowfall data is found in 
-    # first year, this must be defined to fill missing years.
-    FirstY = RawData[0][-1]
-    # Defines last hydro year in RawData. If no snowfall data is found in 
-    # last year, this must be defined to fill missing years.
-    FinalY = RawData[-1][-1]
-    # List of years with data gaps filled. Used to complete x-axis for graphing.
-    AllYears = []
-    # Index counting year value for loop cycle.
-    i = 0
-    while i<FinalY:
-        AllYears.append(FirstY)
-        FirstY = FirstY+1
-        i = i+1
-    # Write a list of missing years
-    MissingHydroY = []
-    # Write an index where these values are located within full year list.
-    # This allows for the insertion of nan values at those locations.
-    MissingHydroIndex = []
-    # Defines the years not found in both sets (Missing records).
-    diff = set(AllYears)-set(StudyYearList)
-    MissYearCount = len(diff)
-    MissingHydroY = sorted(diff)
-    MissingHydroIndex= []
-    for aRow in MissingHydroY:
-        temp = aRow-1
-        MissingHydroIndex.append(temp)
-    #***********************************Insert NaN values***********
-
-    YSFarray = YSFarray.tolist()
-    SDarray = SDarray.tolist()
-    for aRow in MissingHydroIndex:
-        temp = np.nan
-        SDarray.insert(aRow, temp)
-        YSFarray.insert(aRow, temp)
-        ExtremeEventsPerYearCDF.insert(aRow, temp)
-        AnnualStandardDev.insert(aRow, temp)
-        SeasonLen.insert(aRow, temp)
-        DayStart.insert(aRow, temp)
-        DayEnd.insert(aRow, temp)
-
+    x = np.array(StudyYearList)
     DayStart = np.array(DayStart)
-
-    DayEnd = np.array(DayEnd)
-
-    SDarray = np.array(SDarray)
-
-    YSFarray = np.array(YSFarray)
-
-    DailyAverage=np.array([YSFarray/SDarray], dtype=np.float)
-
-    ExtremeEventsPerYearCDF = np.array(ExtremeEventsPerYearCDF)
-
-    AnnualStandardDev = np.array(AnnualStandardDev)
-
-    SeasonLen = np.array(SeasonLen)
-
-    x = np.array(AllYears)
-
     ##********************************Start Dates
     mask = ~np.isnan(x) & ~np.isnan(DayStart)
 
@@ -474,9 +424,7 @@ def SnowFallAnalysis(StationName, SnowData, RawData, SE, f, StationExports, Dayx
     StationExports.append(r_value)
     plt.close()
     ##********************************End Dates
-    # MEET AND DISCUSS
-    # MEET AND DISCUSS
-    # MEET AND DISCUSS
+    DayEnd = np.array(DayEnd)
     mask = ~np.isnan(x) & ~np.isnan(DayEnd)
     fig = plt.figure()
     ax = fig.add_subplot(111)
@@ -504,6 +452,7 @@ def SnowFallAnalysis(StationName, SnowData, RawData, SE, f, StationExports, Dayx
     StationExports.append(r_value)
     plt.close()
     ##********************* Snow Season Length
+    SeasonLen = np.array(SeasonLen)
     mask = ~np.isnan(x) & ~np.isnan(SeasonLen)
 
     fig = plt.figure()
@@ -533,6 +482,7 @@ def SnowFallAnalysis(StationName, SnowData, RawData, SE, f, StationExports, Dayx
     plt.close()
 
     ##********************* Extreme Snow Events CDF
+    ExtremeEventsPerYearCDF = np.array(ExtremeEventsPerYearCDF)
     mask = ~np.isnan(x) & ~np.isnan(ExtremeEventsPerYearCDF)
 
     fig = plt.figure()
@@ -560,6 +510,7 @@ def SnowFallAnalysis(StationName, SnowData, RawData, SE, f, StationExports, Dayx
     StationExports.append(r_value)
     plt.close()
     ##*********************Snow Days
+    SDarray = np.array(SDarray)
     mask = ~np.isnan(x) & ~np.isnan(SDarray)
 
     fig = plt.figure()
@@ -584,6 +535,7 @@ def SnowFallAnalysis(StationName, SnowData, RawData, SE, f, StationExports, Dayx
     StationExports.append(r_value)
     plt.close()
     ##****************Annual Snowfall
+    YSFarray = np.array(YSFarray)
     mask = ~np.isnan(x) & ~np.isnan(YSFarray)
 
     fig = plt.figure()
@@ -598,7 +550,7 @@ def SnowFallAnalysis(StationName, SnowData, RawData, SE, f, StationExports, Dayx
     ax.set_title('Annual Snowfall Totals (mm)', fontweight='bold')
     plt.plot(x,YSFarray,  '-')
     slope, intercept, r_value, p_value, std_err = stats.linregress(x[mask],YSFarray[mask])
-    plt.plot(x,intercept+slope*x, 'r')
+    plt.plot(x,intercept+slope.T*x, 'r')
     ax.text(0.95, 0.01, 'Trendline Slope: %f P Value: %f RSqrd Value: %f' % 
         (slope, p_value, r_value), verticalalignment='bottom', 
         horizontalalignment='right', transform=ax.transAxes, fontsize=8)
@@ -608,7 +560,8 @@ def SnowFallAnalysis(StationName, SnowData, RawData, SE, f, StationExports, Dayx
     StationExports.append(r_value)
     plt.close()
     ##************** Standard Dev
-    mask = ~np.isnan(x) & ~np.isnan(AnnualStandardDev)
+    AnnualSnowfallSTD = np.array(AnnualSnowfallSTD)
+    mask = ~np.isnan(x) & ~np.isnan(AnnualSnowfallSTD)
     fig = plt.figure()
     ax = fig.add_subplot(111)
     ax.grid(True)
@@ -618,9 +571,9 @@ def SnowFallAnalysis(StationName, SnowData, RawData, SE, f, StationExports, Dayx
     fig.subplots_adjust(top=0.85)
     ax.set_xlabel('Hydro Year')
     ax.set_ylabel('Sigma (mm)')
-    ax.set_title('Annual Average of Daily Snowfall Standard Deviation', fontweight='bold')
-    plt.plot(x,AnnualStandardDev,  '-')
-    slope, intercept, r_value, p_value, std_err = stats.linregress(x[mask], AnnualStandardDev[mask])
+    ax.set_title('Daily Snowfall Standard Deviation', fontweight='bold')
+    plt.plot(x,AnnualSnowfallSTD,  '-')
+    slope, intercept, r_value, p_value, std_err = stats.linregress(x[mask], AnnualSnowfallSTD[mask])
     plt.plot(x,intercept+slope*x, 'r')
     ax.text(0.95, 0.01, 'Trendline Slope: %f P Value: %f RSqrd Value: %f' % 
         (slope, p_value, r_value), verticalalignment='bottom', 
@@ -635,8 +588,8 @@ def SnowFallAnalysis(StationName, SnowData, RawData, SE, f, StationExports, Dayx
     ###**************Additional Data Check****************
     ###**************Additional Data Check****************
     ###**************Additional Data Check****************
-
-    StationExports.append(MissYearCount)
+    # MissingYears consists of years with less than 2 records of snowfall
+    StationExports.append(len(MissingYears))
 
 
     # Data gap can mean no winter data was available or all records were 0.0.

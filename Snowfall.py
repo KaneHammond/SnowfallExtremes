@@ -119,7 +119,7 @@ YearLabel = str(query)
 
 # Not Written in as an option yet. This selects day and month to parse
 # the data by. 
-MonthX = 7
+MonthX = 10
 Dayx = 1
 
 

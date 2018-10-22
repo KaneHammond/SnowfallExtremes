@@ -226,6 +226,7 @@ def get_station_id(ftp):
               4,   # HCN/CRN Flag
               6]   # WMO ID
     df = pd.read_fwf(local_full_path, widths=widths, names=names, dtype=dtype, header=None)
+    
     # print list(df.columns.values)
     # print df
 
@@ -241,10 +242,29 @@ def get_station_id(ftp):
         '''
         Get query results, but only the columns we care about
         '''
+        # Modified to also check for station ID
         print('Searching records...')
+        # Try to match based on name (try and except loop failed here)
         matches = df['STATION_NAME'].str.contains(query)
+        
+        # Check how many true records were identified from initial match.
+        # if 0 records, it will prompt to match by station ID.
+        TrueRecords = 0
+        for aItem in matches:
+            if aItem != False:
+                TrueRecords = TrueRecords+1
+        # Match by station ID if station name wasn't found
+        if TrueRecords==0:
+            matches = df['STATION_ID'].str.contains(query)
+
         df = df.loc[matches, ['STATION_ID', 'LATITUDE', 'LONGITUDE', 'ELEVATION', 'STATE', 'STATION_NAME']]
         df.reset_index(drop=True, inplace=True)
+
+        # print('Searching records...')
+        # matches = df['STATION_ID'].str.contains(query)
+        # df = df.loc[matches, ['STATION_ID', 'LATITUDE', 'LONGITUDE', 'ELEVATION', 'STATE', 'STATION_NAME']]
+        # df.reset_index(drop=True, inplace=True)
+    
 
         '''
         Get file sizes of each station's records to augment results
@@ -262,7 +282,7 @@ def get_station_id(ftp):
         Sort by size then by rounded lat/long values to group geographic areas and show stations with most data
         '''
         df_sort = df.round(0)
-        df_sort.sort_values(['LATITUDE', 'LONGITUDE', 'SIZE'], ascending=False, inplace=True)
+        df_sort.sort_values(['STATION_ID', 'LATITUDE', 'LONGITUDE', 'SIZE'], ascending=False, inplace=True)
         df = df.loc[df_sort.index]
         df.reset_index(drop=True, inplace=True)
         

@@ -1,5 +1,5 @@
 from BasicImports import *
-def Split_Data(Data, StationName, f, FirstYear, SnowData, RawData, BaseData, MonthX, DayX, StationExports, OmitYearsT):
+def Split_Data(Data, StationName, f, FirstYear, SnowData, RawData, BaseData, MonthX, DayX, StationExports, OmitYearsT, FinalYear):
     # This File processes raw data for analysis
     # by removing records without snowfall and 
     # defining hydrological years.
@@ -51,7 +51,8 @@ def Split_Data(Data, StationName, f, FirstYear, SnowData, RawData, BaseData, Mon
     # Still starts at study year from query.
     for aRow in allData:
         if aRow[0]>=FirstYear:
-            BaseData.append(aRow)
+            if aRow[0]<=FinalYear:
+                BaseData.append(aRow)
     #***************************************TRIM YEARS*********************
     #***************************************&HYDRO YEARS&*************************
     #*****Format [Year, DD, MM, Precip, Snow, Tmax, Tmin, TOBS]
@@ -223,8 +224,10 @@ def Split_Data(Data, StationName, f, FirstYear, SnowData, RawData, BaseData, Mon
     DateEnd = datetime.strptime(DateEnd, '[%Y/%d/%m]')
 
     delta = DateEnd-DateStart
-    TotalDays = float(delta.days)
-
+    # Add 1 to total days to include the first day 
+    # of the analysis. Without the +1, it doesn't count
+    # for the first day.
+    TotalDays = float(delta.days)+1
     PercentRCov = (Fsum/TotalMonths)*100
 
     plt.figure(figsize=(12,6))
@@ -236,23 +239,26 @@ def Split_Data(Data, StationName, f, FirstYear, SnowData, RawData, BaseData, Mon
     plt.title('Month Coverage Over Study Period')
     plt.text(1, .1, 'Total Record Coverage For Study Period: %f' % 
         (PercentRCov), verticalalignment='top') 
-    plt.savefig('%s/MissingMonthsData.%s' % (OutputLoc, f), dpi=None, 
-        facecolor='w', edgecolor='b', orientation='portrait', papertype=None, 
-        format=None, transparent=False, bbox_inches=None, pad_inches=0.1, 
-        frameon=None)
+    # plt.savefig('%s/MissingMonthsData.%s' % (OutputLoc, f), dpi=None, 
+    #     facecolor='w', edgecolor='b', orientation='portrait', papertype=None, 
+    #     format=None, transparent=False, bbox_inches=None, pad_inches=0.1, 
+    #     frameon=None)
     # plt.show()
+    # Monthly Coverage
     StationExports.append(PercentRCov)
     plt.close()
 
     # Format [Year, DD, MM, Precip, Snow, Tmax, Tmin, TOBS, Hydro Year]
     # Provides percentage of daily record coverage for study period
-
-    DailyRecordCoverage = float(len(RawData))/TotalDays
+    # including nan inserts to fill dates. This value should always be
+    # 100 percent.
+    DailyRecordCoverage = (float(len(RawData))/TotalDays)*100
     StationExports.append(DailyRecordCoverage)
     # ***************************Missing Temperature Analysis
     # ***************************Missing Temperature Analysis
     # ***************************Missing Temperature Analysis
     # WORK
+    # Define omitted years WORK
     MissingTempData = [] # Dataset containing count of missing records per year
     Tx = [] # The x axis value set on hydro years
     Temp = 0
@@ -337,6 +343,8 @@ def Split_Data(Data, StationName, f, FirstYear, SnowData, RawData, BaseData, Mon
     # print Tx
     # print MissingTempData
 
+    # Temperature coverage insert for final data
+    StationExports.append(PercentRCov)
     # ***************************Missing Snowfall Data
     # ***************************Missing Snowfall Data
     # ***************************Missing Snowfall Data
@@ -399,7 +407,12 @@ def Split_Data(Data, StationName, f, FirstYear, SnowData, RawData, BaseData, Mon
         format=None, transparent=False, bbox_inches=None, pad_inches=0.1, 
         frameon=None)
     # plt.show()
+
+    # Snowfall coverage insert for final data
+    StationExports.append(PercentRCov)
     plt.close()
+
+
     # ***************************Missing Rainfall Data
     # ***************************Missing Rainfall Data
     # ***************************Missing Rainfall Data
@@ -460,6 +473,8 @@ def Split_Data(Data, StationName, f, FirstYear, SnowData, RawData, BaseData, Mon
         format=None, transparent=False, bbox_inches=None, pad_inches=0.1, 
         frameon=None)
     # plt.show()
+    # Rain coverage insert for final data
+    StationExports.append(PercentRCov)
     plt.close()
 
     #Snow only record

@@ -1,6 +1,6 @@
 from BasicImports import *
 
-def SnowFallAnalysis(StationName, SnowData, RawData, SE, f, StationExports, Dayx, MonthX):
+def SnowFallAnalysis(StationName, SnowData, RawData, SE, f, StationExports, Dayx, MonthX, YearLabel):
     
     # This ignores all numpy errors. Used to ignore NaN errors.
     # Implemented since NaN values are used to fill empty data.
@@ -17,7 +17,6 @@ def SnowFallAnalysis(StationName, SnowData, RawData, SE, f, StationExports, Dayx
     # The imported list contains no blank ("") snow records. 
     allData = copy.deepcopy(RawData)
     #*********************************COUNT SNOWDAYS AND TOTAL****************
-
     # These values can be used to compare the sum of parsed data
     # this will ensure no records were lost.
     TotalnumbSnowDays = 0
@@ -193,7 +192,6 @@ def SnowFallAnalysis(StationName, SnowData, RawData, SE, f, StationExports, Dayx
     # Index for while loop.
     i = 0
     # Variable for calculations.
-
     while i<len(StartDates):
         try:
             TempVar = (EndDates[i]-StartDates[i]).days
@@ -202,10 +200,21 @@ def SnowFallAnalysis(StationName, SnowData, RawData, SE, f, StationExports, Dayx
         except:
             if TempVar == 0:
                 SeasonLen.append(np.nan)
-        if TempVar>=365:
+        try:
+            if TempVar>=365:
+                SeasonLen.append(np.nan)
+            if TempVar!=0:
+                SeasonLen.append(TempVar)
+        # This was written in to pass the error below:
+        # File "PythonFiles\Snowfall_Analysis.py", line 209, in SnowFallAnalysis
+        # if TempVar>=365:
+        # TypeError: can't compare datetime.datetime to int
+        #
+        # This occured when an end date was not present, but a start date was.
+        # Resulting in a single data which should be a nan value. It all
+        # other try and excepts fail to this point, it will insert a nan value.
+        except:
             SeasonLen.append(np.nan)
-        if TempVar!=0:
-            SeasonLen.append(TempVar)
         TempVar = 0
         i = i+1
 
@@ -406,7 +415,7 @@ def SnowFallAnalysis(StationName, SnowData, RawData, SE, f, StationExports, Dayx
         horizontalalignment='center', transform=ax.transAxes, fontsize=12,
         fontweight=None, color='black')
     fig.subplots_adjust(top=0.85)
-    ax.set_xlabel('Year')
+    ax.set_xlabel(YearLabel)
     ax.set_ylabel('Days From Year Start MM/DD: %s/%s' % (MonthX, Dayx))
     ax.set_title('Days From Year Start to First Snow Event', fontweight='bold')
     plt.plot(x,DayStart,  '-')
@@ -433,7 +442,7 @@ def SnowFallAnalysis(StationName, SnowData, RawData, SE, f, StationExports, Dayx
         horizontalalignment='center', transform=ax.transAxes, fontsize=12,
         fontweight=None, color='black')
     fig.subplots_adjust(top=0.85)
-    ax.set_xlabel('Year')
+    ax.set_xlabel(YearLabel)
     ax.set_ylabel('Days From Year Start MM/DD: %s/%s' % (MonthX, Dayx))
     ax.set_title('Days From Year Start to Final Snow Event', fontweight='bold')
     plt.plot(x,DayEnd,  '-')
@@ -462,7 +471,7 @@ def SnowFallAnalysis(StationName, SnowData, RawData, SE, f, StationExports, Dayx
         horizontalalignment='center', transform=ax.transAxes, fontsize=12,
         fontweight=None, color='black')
     fig.subplots_adjust(top=0.85)
-    ax.set_xlabel('Hydro Year')
+    ax.set_xlabel(YearLabel)
     ax.set_ylabel('Days')
     ax.set_title('Length of Snow Seasons', fontweight='bold')
     plt.plot(x,SeasonLen,  '-')
@@ -492,7 +501,7 @@ def SnowFallAnalysis(StationName, SnowData, RawData, SE, f, StationExports, Dayx
         horizontalalignment='center', transform=ax.transAxes, fontsize=12,
         fontweight=None, color='black')
     fig.subplots_adjust(top=0.85)
-    ax.set_xlabel('Hydro Year')
+    ax.set_xlabel(YearLabel)
     ax.set_ylabel('Days of Extreme Events (CDF>%s)' % (SE))
     ax.set_title('Extreme Snowfall Events Per Year', fontweight='bold')
     plt.plot(x,ExtremeEventsPerYearCDF,  '-')
@@ -520,7 +529,7 @@ def SnowFallAnalysis(StationName, SnowData, RawData, SE, f, StationExports, Dayx
         horizontalalignment='center', transform=ax.transAxes, fontsize=12,
         fontweight=None, color='black')
     fig.subplots_adjust(top=0.85)
-    ax.set_xlabel('Hydro Year')
+    ax.set_xlabel(YearLabel)
     ax.set_ylabel('Snow Days')
     ax.set_title('Total Annual Snowdays', fontweight='bold')
     plt.plot(x,SDarray,  '-')
@@ -545,7 +554,7 @@ def SnowFallAnalysis(StationName, SnowData, RawData, SE, f, StationExports, Dayx
         horizontalalignment='center', transform=ax.transAxes, fontsize=12,
         fontweight=None, color='black')
     fig.subplots_adjust(top=0.85)
-    ax.set_xlabel('Hydro Year')
+    ax.set_xlabel(YearLabel)
     ax.set_ylabel('Annual Snowfall (mm)')
     ax.set_title('Annual Snowfall Totals (mm)', fontweight='bold')
     plt.plot(x,YSFarray,  '-')
@@ -569,8 +578,8 @@ def SnowFallAnalysis(StationName, SnowData, RawData, SE, f, StationExports, Dayx
         horizontalalignment='center', transform=ax.transAxes, fontsize=12,
         fontweight=None, color='black')
     fig.subplots_adjust(top=0.85)
-    ax.set_xlabel('Hydro Year')
-    ax.set_ylabel('Sigma (mm)')
+    ax.set_xlabel(YearLabel)
+    ax.set_ylabel('STD (mm)')
     ax.set_title('Daily Snowfall Standard Deviation', fontweight='bold')
     plt.plot(x,AnnualSnowfallSTD,  '-')
     slope, intercept, r_value, p_value, std_err = stats.linregress(x[mask], AnnualSnowfallSTD[mask])
@@ -584,6 +593,7 @@ def SnowFallAnalysis(StationName, SnowData, RawData, SE, f, StationExports, Dayx
     StationExports.append(r_value)
     # plt.show()
     plt.close()
+
 
     ###**************Additional Data Check****************
     ###**************Additional Data Check****************

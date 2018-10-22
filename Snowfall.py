@@ -83,28 +83,96 @@ if query == 2:
   Stations = Data[-1]
   Name = Data[1]
 
-# # Autorun
+# Autorun
 # SE = 0.95
 # f = 'pdf'
 # FirstYear = 1950
+# FinalYear = 2016
+# YearLabel = 'Year'
 
 # Prompt options for analysis
 print ('*'*25)
+# Define the cdf limit for the snowfall extremes
 query = input('Select CDF Limit For Snowfall Extremes (i.e. 0.95):')
 SE = float(query)
 print ('*'*25)
+# Choose file extension for graphing outputs
 query = raw_input('Define File Extention For Saved Figures (i.e. pdf):')
 f = str(query)
 print ('*'*25)
+# Define start year for clipping data
 query = input('Define Starting Year for Analysis (YYYY):')
 FirstYear = int(query)
+if FirstYear > 2018:
+  print('%i Not a Valid Year' % (FirstYear))
 print ('*'*25)
+# Define final year for clipping data
+query = input('Define Final Year for Analysis (YYYY):')
+FinalYear = int(query)
+if FinalYear > 2018:
+  print('%i Not a Valid Year' % (FinalYear))
+print ('*'*25)
+# Choose label for x-axis on graphing outputs using the custom
+# year clip (MonthX and Dayx).
+query = raw_input('Define Year Labels for x-axis on Figures (i.e. Hydro Year):')
+YearLabel = str(query)
 
 # Not Written in as an option yet. This selects day and month to parse
 # the data by. 
 MonthX = 7
 Dayx = 1
 
+
+# Define final output header. Lenght determines if
+# records will be rejected.
+Header = ['Station', 'State', 'Country', 'Elevation', 
+  'Lat', 'Long', 'MonthCov', 'DailyCov', 'TempCov', 
+  'SnowCov', 'RainCov', 'Min CDF', 'Day Start Slp',
+  'Day Start Pval', 'Day Start Rval', 'Day End Slp',
+  'Day End Pval', 'Day End Rval', 'Snow S len Slp',
+  'Snow S len Pval', 'Snow S len Rval', 'Extrm Evnt Slp',
+  'Extrm Evnt Pval', 'Extrm Evnt Rval', 'Tot Snw Dy Slp',
+  'Tot Snw Dy Pval', 'Tot Snw Dy Rval', 'Ann Snw Ttl Slp',
+  'Ann Snw Ttl Pval', 'Ann Snw Ttl Rval', 'Ann Snw STD Slp',
+  'Ann Snw STD Pval', 'Ann Snw STD Rval', 'MissingSnowYear',
+  'JanAve Slp', 'JanAve Pval', 'JanAve Rval', 
+  'JanSTD Slp', 'JanSDT Pval', 'JanSTD Rval',
+  'FebAve Slp', 'FebAve Pval', 'FebAve Rval', 
+  'FebSTD Slp', 'FebSDT Pval', 'FebSTD Rval',
+  'MarAve Slp', 'MarAve Pval', 'MarAve Rval', 
+  'MarSTD Slp', 'MarSDT Pval', 'MarSTD Rval',
+  'AprAve Slp', 'AprAve Pval', 'AprAve Rval', 
+  'AprSTD Slp', 'AprSDT Pval', 'AprSTD Rval',
+  'MayAve Slp', 'MayAve Pval', 'MayAve Rval', 
+  'MaySTD Slp', 'MaySDT Pval', 'MaySTD Rval',
+  'JunAve Slp', 'JunAve Pval', 'JunAve Rval', 
+  'JunSTD Slp', 'JunSDT Pval', 'JunSTD Rval',
+  'JulAve Slp', 'JulAve Pval', 'JulAve Rval', 
+  'JulSTD Slp', 'JulSDT Pval', 'JulSTD Rval',
+  'AugAve Slp', 'AugAve Pval', 'AugAve Rval', 
+  'AugSTD Slp', 'AugSDT Pval', 'AugSTD Rval',
+  'SepAve Slp', 'SepAve Pval', 'SepAve Rval', 
+  'SepSTD Slp', 'SepSDT Pval', 'SepSTD Rval',
+  'OctAve Slp', 'OctAve Pval', 'OctAve Rval', 
+  'OctSTD Slp', 'OctSDT Pval', 'OctSTD Rval',
+  'NovAve Slp', 'NovAve Pval', 'NovAve Rval', 
+  'NovSTD Slp', 'NovSDT Pval', 'NovSTD Rval',
+  'DecAve Slp', 'DecAve Pval', 'DecAve Rval', 
+  'DecSTD Slp', 'DecSDT Pval', 'DecSTD Rval',
+  'SummerAve Slp', 'SummerAve Pval', 'SummerAve Rval', 
+  'SummerSTD Slp', 'SummerSDT Pval', 'SummerSTD Rval',
+  'FallAve Slp', 'FallAve Pval', 'FallAve Rval', 
+  'FallSTD Slp', 'FallSDT Pval', 'FallSTD Rval',
+  'WinterAve Slp', 'WinterAve Pval', 'WinterAve Rval', 
+  'WinterSTD Slp', 'WinterSDT Pval', 'WinterSTD Rval',
+  'SpringAve Slp', 'SpringAve Pval', 'SpringAve Rval', 
+  'SpringSTD Slp', 'SpringSDT Pval', 'SpringSTD Rval',
+  'AnnualAve Slp', 'AnnualAve Pval', 'AnnualAve Rval', 
+  'AnnualSTD Slp', 'AnnualSDT Pval', 'AnnualSTD Rval']
+
+
+
+# Start Loop
 CheckRecords = []
 FinalData = []
 i = 0
@@ -120,13 +188,17 @@ for i in tqdm.tqdm(range(ProgBarLimit)):
   BaseData = []
   StationExports = []
   if Path == 1:
+    StationExports.append(Stations[i])
+    # Insert a null for state column.
+    # Data download/prep does not include a state section
+    # when downloading data only by country/latitude.
     StationExports.append('null')
     StationExports.append(Country[i])
     StationExports.append(Elevation[i])
     StationExports.append(Lat[i])
     StationExports.append(Long[i])
     StationName = Stations[i]
-    StationExports.append(Stations[i])
+    # StationExports.append(Stations[i])
     State = Country[i]
   if Path == 2:
     StationExports.append(Stations)
@@ -268,28 +340,27 @@ for i in tqdm.tqdm(range(ProgBarLimit)):
   Data['TMAX'] = Data['TMAX'].apply(lambda x: x/10)
   Data = Data.values.tolist()
   # Loop analysis
-  i = i+1
   # Specified to pass stations with errors
   if Path != 2:
     try:
       from SplitData import *
-      Split_Data(Data, StationName, f, FirstYear, SnowData, RawData, BaseData, MonthX, Dayx, StationExports, OmitYearsT)
+      Split_Data(Data, StationName, f, FirstYear, SnowData, RawData, BaseData, MonthX, Dayx, StationExports, OmitYearsT, FinalYear)
     except:
       pass
     try:
       from Snowfall_Analysis import *
-      SnowFallAnalysis(StationName, SnowData, RawData, SE, f, StationExports, Dayx, MonthX)
+      SnowFallAnalysis(StationName, SnowData, RawData, SE, f, StationExports, Dayx, MonthX, YearLabel)
     except:
       pass
     try:
       from Temperature_Analysis import *
-      Temperature(RawData, StationName, f, BaseData, StationExports, OmitYearsT)
+      Temperature(RawData, StationName, f, BaseData, StationExports, OmitYearsT, YearLabel)
       # FinalData.append(StationExports)
     except:
       pass
-    if len(StationExports)==133:
+    if len(StationExports)==len(Header):
       FinalData.append(StationExports)
-    if len(StationExports)!=133:
+    if len(StationExports)!=len(Header):
       CheckRecords.append(Stations[i])
   # This path will not force errors to pass for later analysis.
   # Purpose is to run troubled stations individually to define where
@@ -298,65 +369,19 @@ for i in tqdm.tqdm(range(ProgBarLimit)):
     # Print to move response away from loading bar
     # print ('\n')
     from SplitData import *
-    Split_Data(Data, StationName, f, FirstYear, SnowData, RawData, BaseData, MonthX, Dayx, StationExports, OmitYearsT)
+    Split_Data(Data, StationName, f, FirstYear, SnowData, RawData, BaseData, MonthX, Dayx, StationExports, OmitYearsT, FinalYear)
 
     from Snowfall_Analysis import *
-    SnowFallAnalysis(StationName, SnowData, RawData, SE, f, StationExports, Dayx, MonthX)
+    SnowFallAnalysis(StationName, SnowData, RawData, SE, f, StationExports, Dayx, MonthX, YearLabel)
 
     from Temperature_Analysis import *
-    Temperature(RawData, StationName, f, BaseData, StationExports, OmitYearsT)
+    Temperature(RawData, StationName, f, BaseData, StationExports, OmitYearsT, YearLabel)
     # FinalData.append(StationExports)
-    if len(StationExports)==133:
+    if len(StationExports)==len(Header):
       FinalData.append(StationExports)
-    if len(StationExports)!=133:
+    if len(StationExports)!=len(Header):
       CheckRecords.append(Stations[i])
-
-
-
-Header = ['Station', 'State', 'Country', 'Elevation', 
-  'Lat', 'Long', 'MonthCov', 'DailyCov', 'Min CDF', 'Day Start Slp',
-  'Day Start Pval', 'Day Start Rval', 'Day End Slp',
-  'Day End Pval', 'Day End Rval', 'Snow S len Slp',
-  'Snow S len Pval', 'Snow S len Rval', 'Extrm Evnt Slp',
-  'Extrm Evnt Pval', 'Extrm Evnt Rval', 'Tot Snw Dy Slp',
-  'Tot Snw Dy Pval', 'Tot Snw Dy Rval', 'Ann Snw Ttl Slp',
-  'Ann Snw Ttl Pval', 'Ann Snw Ttl Rval', 'Ann Snw STD Slp',
-  'Ann Snw STD Pval', 'Ann Snw STD Rval', 'MissingSnowYear',
-  'JanAve Slp', 'JanAve Pval', 'JanAve Rval', 
-  'JanSTD Slp', 'JanSDT Pval', 'JanSTD Rval',
-  'FebAve Slp', 'FebAve Pval', 'FebAve Rval', 
-  'FebSTD Slp', 'FebSDT Pval', 'FebSTD Rval',
-  'MarAve Slp', 'MarAve Pval', 'MarAve Rval', 
-  'MarSTD Slp', 'MarSDT Pval', 'MarSTD Rval',
-  'AprAve Slp', 'AprAve Pval', 'AprAve Rval', 
-  'AprSTD Slp', 'AprSDT Pval', 'AprSTD Rval',
-  'MayAve Slp', 'MayAve Pval', 'MayAve Rval', 
-  'MaySTD Slp', 'MaySDT Pval', 'MaySTD Rval',
-  'JunAve Slp', 'JunAve Pval', 'JunAve Rval', 
-  'JunSTD Slp', 'JunSDT Pval', 'JunSTD Rval',
-  'JulAve Slp', 'JulAve Pval', 'JulAve Rval', 
-  'JulSTD Slp', 'JulSDT Pval', 'JulSTD Rval',
-  'AugAve Slp', 'AugAve Pval', 'AugAve Rval', 
-  'AugSTD Slp', 'AugSDT Pval', 'AugSTD Rval',
-  'SepAve Slp', 'SepAve Pval', 'SepAve Rval', 
-  'SepSTD Slp', 'SepSDT Pval', 'SepSTD Rval',
-  'OctAve Slp', 'OctAve Pval', 'OctAve Rval', 
-  'OctSTD Slp', 'OctSDT Pval', 'OctSTD Rval',
-  'NovAve Slp', 'NovAve Pval', 'NovAve Rval', 
-  'NovSTD Slp', 'NovSDT Pval', 'NovSTD Rval',
-  'DecAve Slp', 'DecAve Pval', 'DecAve Rval', 
-  'DecSTD Slp', 'DecSDT Pval', 'DecSTD Rval',
-  'SummerAve Slp', 'SummerAve Pval', 'SummerAve Rval', 
-  'SummerSTD Slp', 'SummerSDT Pval', 'SummerSTD Rval',
-  'FallAve Slp', 'FallAve Pval', 'FallAve Rval', 
-  'FallSTD Slp', 'FallSDT Pval', 'FallSTD Rval',
-  'WinterAve Slp', 'WinterAve Pval', 'WinterAve Rval', 
-  'WinterSTD Slp', 'WinterSDT Pval', 'WinterSTD Rval',
-  'SpringAve Slp', 'SpringAve Pval', 'SpringAve Rval', 
-  'SpringSTD Slp', 'SpringSDT Pval', 'SpringSTD Rval',
-  'AnnualAve Slp', 'AnnualAve Pval', 'AnnualAve Rval', 
-  'AnnualSTD Slp', 'AnnualSDT Pval', 'AnnualSTD Rval']
-
+    i = i+1
 
 if Path != 2:
   print ('Writting Output File...')
@@ -381,7 +406,7 @@ if len(CheckRecords)>0:
   print ('Writting Rejected Stations File...')
   if Path != 2:
     with open("Output/ERROR_STATIONS.csv", "w") as fp:
-      a = csv.writer(fp, delimiter=',', lineterminator='\n')
+      a = csv.writer(fp)
       data = CheckRecords
       a.writerow(data)
 

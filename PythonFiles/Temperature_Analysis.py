@@ -1,6 +1,6 @@
 from BasicImports import *
 
-def Temperature (RawData, StationName, f, BaseData, StationExports, OmitYearsT):
+def Temperature (RawData, StationName, f, BaseData, StationExports, OmitYearsT, YearLabel):
     dir = 'Output/'+StationName+'/Temperature'
     if not os.path.exists(dir):
         os.makedirs('Output/'+StationName+'/Temperature')
@@ -12,8 +12,8 @@ def Temperature (RawData, StationName, f, BaseData, StationExports, OmitYearsT):
     for subfolder_name in subfolder_names:
         os.makedirs(os.path.join(dir, subfolder_name))
 
-    # Name x axis on graphs:
     NameX = 'Years'
+
 
     # Ensure clipping of years missing data. SplitData initially does this.
     # However, the modification is overwritten/forgotten prior to use by this 
@@ -382,7 +382,8 @@ def Temperature (RawData, StationName, f, BaseData, StationExports, OmitYearsT):
     # being analyzed if data gaps are present. The program clips anything
     # that isn't a full year (based on RawData year clip). 
     # If every year is present in the data, no winter gaps will 
-    # be found. 
+    # be found. If the rawdata clip is defined as 12, 1, or 2, then this
+    # will not work.
     WinterAve = []
     WinterSTD = []
     WinterYears = []
@@ -446,6 +447,8 @@ def Temperature (RawData, StationName, f, BaseData, StationExports, OmitYearsT):
                 TemperTemp.append(ave)
         # WORK WORK WORK
         # Check for OmitYears to pass as nan
+        # This omit section is based upon missing data identified 
+        # by split data. Not complete
         # if aRow[-1]==OmitYearsT[z]:
         #     # print OmitYearsT[z]
         #     AnnualSTD.append(np.std(np.nan))
@@ -1829,7 +1832,7 @@ def Temperature (RawData, StationName, f, BaseData, StationExports, OmitYearsT):
         horizontalalignment='center', transform=ax.transAxes, fontsize=12,
         fontweight=None, color='black')
     fig.subplots_adjust(top=0.85)
-    ax.set_xlabel(NameX)
+    ax.set_xlabel(YearLabel)
     ax.set_ylabel('Average Temperature (C)')
     ax.set_title('Average Annual Temperature', fontweight='bold')
     plt.plot(AnnualYears,AnnualAve,  '-')
@@ -1858,7 +1861,7 @@ def Temperature (RawData, StationName, f, BaseData, StationExports, OmitYearsT):
         horizontalalignment='center', transform=ax.transAxes, fontsize=12,
         fontweight=None, color='black')
     fig.subplots_adjust(top=0.85)
-    ax.set_xlabel(NameX)
+    ax.set_xlabel(YearLabel)
     ax.set_ylabel('Standard Deviation')
     ax.set_title('Annual Temperature STD', fontweight='bold')
     plt.plot(AnnualYears,AnnualSTD,  '-')

@@ -239,7 +239,7 @@ query = query.upper()
 if query == 'Y':
     print ('*'*25)
     print ('1. Equal to or Greater Than\n2. Equal to or Less Than')
-    query = input('Drop Records Which Are(1/2):')
+    query = input('Select Records Which Are(1/2):')
     query = int(query)
     if query == 1:
         print ('*'*25)

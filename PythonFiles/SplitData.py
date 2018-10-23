@@ -275,6 +275,12 @@ def Split_Data(Data, StationName, f, FirstYear, SnowData, RawData, BaseData, Mon
         if aRow[-1]!=HY:
             Tx.append(HY)
             HY = aRow[-1]
+            try:  
+                if np.isnan(aRow[-2]) == True and np.isnan(aRow[6]) == True:
+                    Temp = Temp+1
+            except:
+                if np.isnan(aRow[-2]) == True and np.isnan(aRow[5]) == True:
+                    Temp = Temp+1
             MissingTempData.append(Temp)
             Temp=0
     Tx.append(HY)
@@ -360,6 +366,8 @@ def Split_Data(Data, StationName, f, FirstYear, SnowData, RawData, BaseData, Mon
         if aRow[-1]!=HY:
             Sx.append(HY)
             HY = aRow[-1]
+            if np.isnan(aRow[-5]) == True:
+                Temp = Temp+1
             MissingSnowData.append(Temp)
             Temp=0
     Sx.append(HY)
@@ -428,6 +436,8 @@ def Split_Data(Data, StationName, f, FirstYear, SnowData, RawData, BaseData, Mon
         if aRow[-1]!=HY:
             Rx.append(HY)
             HY = aRow[-1]
+            if np.isnan(aRow[-6]) == True:
+                Temp = Temp+1
             MissingRainData.append(Temp)
             Temp=0
     Rx.append(HY)

@@ -89,7 +89,6 @@ if query == 2:
 # FirstYear = 1950
 # FinalYear = 2016
 # YearLabel = 'Year'
-
 # Prompt options for analysis
 print ('*'*25)
 # Define the cdf limit for the snowfall extremes
@@ -209,13 +208,13 @@ for i in tqdm.tqdm(range(ProgBarLimit)):
     StationExports.append('null')
     StationName = Name
   if Path == 3:
+    StationExports.append(Stations[i])
     StationExports.append(States[i])
     StationExports.append(Country[i])
     StationExports.append(Elevation[i])
     StationExports.append(Lat[i])
     StationExports.append(Long[i])
     StationName = StationNames[i]
-    StationExports.append(Stations[i])
     State = States[i]
   # Select stations from state folders using StationInformation.csv
   # State = States[i]
@@ -228,8 +227,13 @@ for i in tqdm.tqdm(range(ProgBarLimit)):
 
   # Format to meet current program design ([Date, PRCP, SNOW, TMAX, TMIN, TOBS])
   Data = Data.drop(columns=['ID', 'YEAR', 'MONTH', 'DAY'])
-  Data = Data[['MM/DD/YYYY', 'PRCP', 'SNOW', 'TMAX', 'TMIN', 'TOBS']]
-
+  try:
+    Data = Data[['MM/DD/YYYY', 'PRCP', 'SNOW', 'TMAX', 'TMIN', 'TOBS']]
+  except:
+    Data = Data[['MM/DD/YYYY', 'SNOW', 'TMAX', 'TMIN']]
+    Data['PRCP'] = np.nan
+    Data['TOBS'] = np.nan
+    Data = Data[['MM/DD/YYYY', 'PRCP', 'SNOW', 'TMAX', 'TMIN', 'TOBS']]
 
   # Fill in missing dates with nan records to close data gaps.
 

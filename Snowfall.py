@@ -83,12 +83,13 @@ if query == 2:
   Stations = Data[-1]
   Name = Data[1]
 
-# Autorun
+# # Autorun
 # SE = 0.95
 # f = 'pdf'
-# FirstYear = 1950
-# FinalYear = 2016
+# FirstYear = 1941
+# FinalYear = 2000
 # YearLabel = 'Year'
+
 # Prompt options for analysis
 print ('*'*25)
 # Define the cdf limit for the snowfall extremes
@@ -118,11 +119,11 @@ YearLabel = str(query)
 
 # Not Written in as an option yet. This selects day and month to parse
 # the data by. 
-MonthX = 10
+MonthX = 7
 Dayx = 1
 
 
-# Define final output header. Lenght determines if
+# Define final output header. Length determines if
 # records will be rejected.
 Header = ['Station', 'State', 'Country', 'Elevation', 
   'Lat', 'Long', 'MonthCov', 'DailyCov', 'TempCov', 
@@ -181,11 +182,24 @@ if Path == 2:
   ProgBarLimit = 1
 print ('Initiating Analysis...')
 for i in tqdm.tqdm(range(ProgBarLimit)):
+  # Years for temperature to omit
   OmitYearsT = []
-  SnowData = []
+  # Data cut for analysis
   RawData = []
+  # Uncut data
   BaseData = []
+  # Main export location for station analysis data
   StationExports = []
+  # Stats for missing snowfall records per winter season
+  WinterStats = []
+  # Years for Winter stats
+  WSY = []
+  # Define set for missing snow records per winter season.
+  # Modified in Split Data
+  MissingSnowData = []
+  # Write a list for season rejected containing one snow day
+  SingleYearSnowfall = []
+
   if Path == 1:
     StationExports.append(Stations[i])
     # Insert a null for state column.
@@ -348,12 +362,16 @@ for i in tqdm.tqdm(range(ProgBarLimit)):
   if Path != 2:
     try:
       from SplitData import *
-      Split_Data(Data, StationName, f, FirstYear, SnowData, RawData, BaseData, MonthX, Dayx, StationExports, OmitYearsT, FinalYear)
+      Split_Data(Data, StationName, f, FirstYear, RawData, 
+        BaseData, MonthX, Dayx, StationExports, OmitYearsT, FinalYear,
+        WinterStats, WSY, MissingSnowData)
     except:
       pass
     try:
       from Snowfall_Analysis import *
-      SnowFallAnalysis(StationName, SnowData, RawData, SE, f, StationExports, Dayx, MonthX, YearLabel)
+      SnowFallAnalysis(StationName, RawData, SE, f, 
+        StationExports, Dayx, MonthX, YearLabel, WinterStats, WSY,
+        MissingSnowData, BaseData, SingleYearSnowfall)
     except:
       pass
     try:
@@ -371,12 +389,16 @@ for i in tqdm.tqdm(range(ProgBarLimit)):
   # errors are occuring.
   if Path == 2:
     # Print to move response away from loading bar
-    # print ('\n')
+    print ('\n')
     from SplitData import *
-    Split_Data(Data, StationName, f, FirstYear, SnowData, RawData, BaseData, MonthX, Dayx, StationExports, OmitYearsT, FinalYear)
+    Split_Data(Data, StationName, f, FirstYear, RawData, 
+      BaseData, MonthX, Dayx, StationExports, OmitYearsT, FinalYear,
+      WinterStats, WSY, MissingSnowData)
 
     from Snowfall_Analysis import *
-    SnowFallAnalysis(StationName, SnowData, RawData, SE, f, StationExports, Dayx, MonthX, YearLabel)
+    SnowFallAnalysis(StationName, RawData, SE, f, 
+      StationExports, Dayx, MonthX, YearLabel, WinterStats, WSY,
+      MissingSnowData, BaseData, SingleYearSnowfall)
 
     from Temperature_Analysis import *
     Temperature(RawData, StationName, f, BaseData, StationExports, OmitYearsT, YearLabel)

@@ -1,6 +1,8 @@
 from BasicImports import *
 
-def SnowFallAnalysis(StationName, SnowData, RawData, SE, f, StationExports, Dayx, MonthX, YearLabel):
+def SnowFallAnalysis(StationName, RawData, SE, f, 
+    StationExports, Dayx, MonthX, YearLabel, WinterStats, WSY,
+    MissingSnowData, BaseData, SingleYearSnowfall):
     
     # This ignores all numpy errors. Used to ignore NaN errors.
     # Implemented since NaN values are used to fill empty data.
@@ -12,9 +14,8 @@ def SnowFallAnalysis(StationName, SnowData, RawData, SE, f, StationExports, Dayx
     else:
         shutil.rmtree(dir)
         os.makedirs(dir)
-    #*****************************************Snow only index****************
+    #*******************************************************
     #Format [Year, DD, MM, Precip, Snow, Tmax, Tmin, TOBS, Hydro Year]
-    # The imported list contains no blank ("") snow records. 
     allData = copy.deepcopy(RawData)
     #*********************************COUNT SNOWDAYS AND TOTAL****************
     # These values can be used to compare the sum of parsed data
@@ -86,7 +87,6 @@ def SnowFallAnalysis(StationName, SnowData, RawData, SE, f, StationExports, Dayx
                 SnowT.append(aRow[-5])
                 if np.isnan(aRow[-5]) != True:
                     SnowCount = SnowCount+1
-
     SnowY.append(j)
     if np.nansum(SnowT)==0.0:
         AnnualSnowFall.append(np.sum(SnowT))
@@ -95,7 +95,7 @@ def SnowFallAnalysis(StationName, SnowData, RawData, SE, f, StationExports, Dayx
     AnnualSnowfallSTD.append(np.nanstd(SnowT))      
     SnowDays.append(SnowCount)
 
-    # Treat 0 snowfall years as NaN:
+    # Treat 0 snowfall *years* as NaN:
     i = 0
     Temp = []
     for aRow in SnowDays:
@@ -107,6 +107,207 @@ def SnowFallAnalysis(StationName, SnowData, RawData, SE, f, StationExports, Dayx
     StudyYearList = SnowY
 
     SnowDays = copy.deepcopy(Temp)
+
+    #********************************ERROR CHECK ERROR CHECK*****************
+    # Determine which years lack data coverage and are well below
+    # the average season data coverage. USES: WSY, MissingSnowData, WinterStats  
+    #WORK
+
+    # Issues trying to determine how to drop records persists..... 10-30-18
+
+    # Y = range(1, RawData[-1][-1])
+    
+    # i = 0
+    # DataWithYears = []
+    # StatsWithYears = []
+    # index = []
+    # while i < len(WSY):
+    #     temp = [WSY[i], WinterStats[i]]
+    #     temp2 = [WSY[i], MissingSnowData[i]]
+    #     # Data with years contains missing records per year
+    #     DataWithYears.append(temp2)
+    #     # Stats with years is missing records per winter season
+    #     StatsWithYears.append(temp)
+    #     temp = []
+    #     temp2 = []
+    #     i=i+1
+
+    # # Sort the earlier years in data set by lowest number of missing records
+    # df = pd.DataFrame(StatsWithYears, columns=['Year', 'MissingData'])
+
+    # df = df.sort_values(['MissingData', 'Year'])
+
+    # # Determine mean and std of missing records per winter season
+    # GraphData = df['MissingData'].tolist()
+    # mean = np.mean(GraphData)
+    # STD = np.std(GraphData)
+
+    # # Identify 2 standard deviations from mean
+    # CutValue = mean+(STD*3)
+    # # Write list of both year and missing records
+    # Data = df.values.tolist()
+    # # Create empty list for years that need to be cut
+    # DropYears = []
+    # for aRow in Data:
+    #     if aRow[-1] >= CutValue:
+    #         DropYears.append(aRow[0])
+
+    # # Modify all data to remove records containing dropyears
+    # def diff(list1, list2):
+    #     return list(set(list1).symmetric_difference(set(list2)))
+    # list1 = StudyYearList
+    # list2 = DropYears
+    # # print list2
+    # Diff = diff(list1, list2)
+    # df = pd.DataFrame(allData)
+
+    # df = df[df[8].isin(Diff)]
+
+
+
+    # Fm = collections.Counter(GraphData)
+    # F = Fm.values()
+    # Variables = Fm.keys()
+    # Fsum = sum(F)
+    # Frequency = []
+    # for aRow in F:
+    #     x = float(aRow)
+    #     temp = x/Fsum
+    #     Frequency.append(temp)
+
+    # CDF = scipy.stats.rv_discrete(values=(Variables, Frequency))
+    # CDF = CDF.cdf(Variables)
+    # # x is snowfall amount
+    # x = sorted(Variables)
+    # # y is CDF values for each variable
+    # y = sorted(CDF)
+
+
+    # ## This section is the reverse emperical
+    # ## y2 is the reverse emperical line.
+    # # y2 = []
+    # # for aRow in y:
+    # #     V = 1 - aRow
+    # #     y2.append(V)
+    # #     V = 0
+    # fig, ax = plt.subplots(1, 1)
+    # ax.grid(True)
+    # #SE is pre-defined variable representing CDF limit
+    # ax.text(-0.01, 0.93, '%s' % (SE), verticalalignment='top', 
+    #     horizontalalignment='right', transform=ax.transAxes, fontsize=9,
+    #     fontweight='bold', color='r')
+    # ax.text(.5, 1.1, 'Station: %s' % (StationName), verticalalignment='center', 
+    #     horizontalalignment='center', transform=ax.transAxes, fontsize=12,
+    #     fontweight=None, color='black')
+    # ax.plot(x, y, label='CDF')
+    # # ax.plot(x, y2, label='Reversed emp.')
+    # ax.legend(loc='right')
+    # ax.set_title('Cumulative Distrbution of Snowfall')
+    # ax.set_xlabel('Daily Snowfall (mm)')
+    # ax.set_ylabel('CDF Value')
+    # # ax.set_yticks([0.2, 0.4, 0.6, 0.8, 1], minor=False)
+    # ax.set_yticks([SE], minor=True)
+    # # ax.yaxis.grid(True, which='major', color='g', linewidth=0.5)
+    # ax.yaxis.grid(True, which='minor', color='r', linewidth=1.25)
+    # # plt.savefig('%s/CDF_Snowfall.%s' % (dir, f), 
+    # #     dpi=None, facecolor='w', edgecolor='b', orientation='portrait', 
+    # #     papertype=None, format=None, transparent=False, bbox_inches=None, 
+    # #     pad_inches=0.1, frameon=None)
+    # plt.show()
+    # plt.close()
+    # sys.exit()
+    # Density Plot and Histogram of all missing data records
+    # sns.distplot(GraphData, hist=True, kde=True, 
+    #          bins=int(180/5), color = 'darkblue', 
+    #          hist_kws={'edgecolor':'black'},
+    #          kde_kws={'linewidth': 4}, label=['Percentage of Records']).set_title('Missing Snowfall Records(Nov-Jan)')
+    # plt.legend()
+    # plt.show()
+    # sys.exit()
+    #**************************************************************
+    
+    # WORK
+    # This section uses an ARIMA porjection algorithme to project
+    # precipitation. Does not handle seasons with missing data.
+
+
+    ## Convert the dates to date time
+
+    # PlotData = []
+    # indexDates = []
+    # for aRow in allData:
+    #     date = aRow[0:3]
+    #     date = str(date)
+    #     date = date.replace(', ', '-')
+    #     date = datetime.strptime(date, '[%Y-%d-%m]')
+    #     # indexDates.append(date)
+    #     aRow.insert(0, date)
+    #     PlotData.append(aRow)
+
+    ## In order to run this, zeros must be assumed for missing
+    ## records so a trend can be determined. In many cases, nan values
+    ## are recorded in months other than winter. Suggesting no data
+    ## was collected when the snowfall was zero. This may not be true in 
+    ## all cases.
+
+    # df = pd.DataFrame(PlotData)
+    # # print df
+    # df[5].fillna(0, inplace=True)
+    # date = df[0].tolist()
+
+
+    # data = df[4]
+    # data.head()
+    # data.index = pd.to_datetime(date)
+
+    # # data.columns = ['Snowfall']
+
+    # # Mod*** Changed to plot
+    # data.plot(title="Energy Production Jan 1985--Jan 2018")
+    # plt.show()
+    # plt.close()
+
+
+    # result = seasonal_decompose(data, model='multiplicative')
+    # result.plot()
+    # plt.show()
+    # plt.close()
+
+    # from pyramid.arima import auto_arima
+    # stepwise_model = auto_arima(data, start_p=1, start_q=1,
+    #                            max_p=3, max_q=3, m=1,
+    #                            start_P=0, seasonal=True,
+    #                            d=1, D=1, trace=True,
+    #                            error_action='ignore',  
+    #                            suppress_warnings=True, 
+    #                            stepwise=True)
+    # print(stepwise_model.aic())
+
+    # train = data.loc['1985-01-01':'2016-12-01']
+    # test = data.loc['2017-01-01':]
+
+    # stepwise_model.fit(train)
+
+    # future_forecast = stepwise_model.predict(n_periods=21)
+
+    # # print future_forecast
+
+    # # print stepwise_model
+
+    # future_forecast = pd.DataFrame(future_forecast,index = test.index,columns=['Prediction'])
+
+    # print future_forecast
+    # print test
+
+
+    # pd.concat([test,future_forecast],axis=1).plot()
+    # # plt.show()
+    # plt.close()
+    # pd.concat([data,future_forecast],axis=1).plot(linewidth = 0.7)
+    # plt.show()
+    # plt.close()
+
+    #*************************************************************************
 
     #*********************************#Calculate Daily Averages Per Year*************
     YSFarray=np.array(AnnualSnowFall, dtype=np.float) #Defines an array of AnnualSnowFall data
@@ -156,12 +357,13 @@ def SnowFallAnalysis(StationName, SnowData, RawData, SE, f, StationExports, Dayx
                 TempVar = datetime.strptime(TempVar, '[%Y/%d/%m]')
                 EndDates.append(TempVar)
             # Insert nan if 1 record or less is found. Assumes no 
-            # winter experiences no snowfall or always at least 2 events.
+            # winter season found. Inserts nan to pass over year.
             if len(SnowRecords)<=1:
                 MissingYears.append(prevYear)
                 StartDates.append(np.nan)
                 EndDates.append(np.nan)
-
+                if len(SnowRecords)==1:
+                    SingleYearSnowfall.append(aRow[-1])
             SnowRecords = [] 
             if aRow[-5]!=0.0 and np.isnan(aRow[-5]) != True:
                 SnowRecords.append(aRow)
@@ -322,6 +524,7 @@ def SnowFallAnalysis(StationName, SnowData, RawData, SE, f, StationExports, Dayx
     #     V = 1 - aRow
     #     y2.append(V)
     #     V = 0
+
     fig, ax = plt.subplots(1, 1)
     ax.grid(True)
     #SE is pre-defined variable representing CDF limit
@@ -603,6 +806,8 @@ def SnowFallAnalysis(StationName, SnowData, RawData, SE, f, StationExports, Dayx
 
 
     # Data gap can mean no winter data was available or all records were 0.0.
+    # This section is not best used for larger data processing. 
+    # Results in too many outputs. Will make optional in future.
 
     # if MissYearCount>0:
     #     os.makedirs(os.path.join(dir, 'ErrorData'))

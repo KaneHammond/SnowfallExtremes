@@ -1,5 +1,7 @@
 from BasicImports import *
-def Split_Data(Data, StationName, f, FirstYear, SnowData, RawData, BaseData, MonthX, DayX, StationExports, OmitYearsT, FinalYear):
+def Split_Data(Data, StationName, f, FirstYear, RawData, 
+    BaseData, MonthX, DayX, StationExports, OmitYearsT, FinalYear,
+    WinterStats, WSY, MissingSnowData):
     # This File processes raw data for analysis
     # by removing records without snowfall and 
     # defining hydrological years.
@@ -62,7 +64,8 @@ def Split_Data(Data, StationName, f, FirstYear, SnowData, RawData, BaseData, Mon
     temp = []
     for aRow in allData:
         if aRow[0] >= FirstYear:
-            temp.append(aRow)
+            if aRow[0] <= FinalYear: 
+                temp.append(aRow)
     allData = []
     allData = copy.deepcopy(temp)
     temp = []
@@ -72,6 +75,7 @@ def Split_Data(Data, StationName, f, FirstYear, SnowData, RawData, BaseData, Mon
     for aRow in allData:
         if aRow[0]==prevYear or aRow[0]==prevYear+1:
             try:
+                # MonthX and Dayx are defined cut dates from Snowfall.py
                 if aRow[2]==MonthX and aRow[1]==DayX:
                     hydroYear=hydroYear+1
             except:
@@ -103,28 +107,21 @@ def Split_Data(Data, StationName, f, FirstYear, SnowData, RawData, BaseData, Mon
             TempDataIndex.append(aRow)
 
     allData = []
+
     # Append method used here. copy.deepcopy resulted in blank index
     # after exported from definition
-    # TESTING THIS REMOVES YEARS ON PURPOSE REMOVE FOR ANALYSIS 
     for aRow in TempDataIndex:
         RawData.append(aRow)
-    # TempDataIndex = []
-    # for aRow in RawData:
-    #     if aRow[0]!=1956:
-    #         TempDataIndex.append(aRow)
-    # RawData = []
-    # for aRow in TempDataIndex:
-    #     RawData.append(aRow)
-    # TempDataIndex = []
+
     # Remove partial years in middle of dataset.
     # Define the first Yearclip from dataset.
-
     YearClip = RawData[0][-1]
     # Temp variable for reading which years are present in year clip.
     # i.e. which YYYY are present in year set X or XX. Switch from hydro year
-    # makes this a general year cut at a given date. So 2 YYYY years should 
+    # makes this a general year cut at a given date. So 2 standar (YYYY) years should 
     # be present. If only one is found to exist, then portions of the year
-    # are missing and that section of the record will be omitted.
+    # are missing and that section of the record will be omitted to ensure only
+    # full years from the clip are retained.
     YearsInSet = []
     # Define count, this is used to define which YYYY are present
     Count = 0
@@ -180,7 +177,7 @@ def Split_Data(Data, StationName, f, FirstYear, SnowData, RawData, BaseData, Mon
     for aRow in RawData:
         ListMonths.append(aRow[2])
 
-    # Filters out months to leave only key variables per hydro year.
+    # Filters out months to leave only key variables per year.
     # Result is a list of numbers 1 to 12 for each year. If no data for a 
     # month is found for a given year, then that month will not appear in that range.
     prevRow = ListMonths[0]
@@ -257,8 +254,7 @@ def Split_Data(Data, StationName, f, FirstYear, SnowData, RawData, BaseData, Mon
     # ***************************Missing Temperature Analysis
     # ***************************Missing Temperature Analysis
     # ***************************Missing Temperature Analysis
-    # WORK
-    # Define omitted years WORK
+
     MissingTempData = [] # Dataset containing count of missing records per year
     Tx = [] # The x axis value set on hydro years
     Temp = 0
@@ -286,21 +282,20 @@ def Split_Data(Data, StationName, f, FirstYear, SnowData, RawData, BaseData, Mon
     Tx.append(HY)
     MissingTempData.append(Temp)
 
-    # Define years missing data to omit from annual averages
-    # WORK WORK
     temp = 0
     i = 0
     for aRow in MissingTempData:
         aRow = float(aRow)
-        temp = aRow/365
-        # Anything greater than 100 years
-        if temp >= 0.2739:
+        # 37 missing days is approcimately 10 percent of the data
+        # This will ensure only records with 90 percent coverage are
+        # used for annual averages
+        if aRow>=37:
             OmitYearsT.append(Tx[i])
         i = i+1
 
-
-    # Write data for missing years. Estimates missing 365 records per
-    # year. Ignores leap years of 366 as 365 (not considered significant)
+    # Write nan data for missing years. Estimates missing 365 records per
+    # year. Ignores leap years of 366 as 365 (not considered significant).
+    # This section is only used if nan value insert fails.
     temp = set(Tx).symmetric_difference(set(FullHY))
     temp = list(temp)
 
@@ -354,26 +349,42 @@ def Split_Data(Data, StationName, f, FirstYear, SnowData, RawData, BaseData, Mon
     # ***************************Missing Snowfall Data
     # ***************************Missing Snowfall Data
     # ***************************Missing Snowfall Data
-    # WORK
-    MissingSnowData = [] # Dataset containing count of missing records per year
+    # MissingSnowData Dataset containing count of missing records per year
     Sx = [] # The x axis value set of hydro years
     Temp = 0
     HY = 1 # Hydro Year
+    MonthSnow = []
+    MonthsPerYear = []
     for aRow in RawData:
         if aRow[-1]==HY:   
             if np.isnan(aRow[-5]) == True:
+                MonthSnow.append(aRow[2])
                 Temp = Temp+1
         if aRow[-1]!=HY:
             Sx.append(HY)
             HY = aRow[-1]
             if np.isnan(aRow[-5]) == True:
                 Temp = Temp+1
+                MonthSnow.append(aRow[2])
             MissingSnowData.append(Temp)
+            MonthsPerYear.append(MonthSnow)
+            MonthSnow = []
             Temp=0
     Sx.append(HY)
     MissingSnowData.append(Temp)
-    # print Sx
-    # print MissingSnowData
+    MonthsPerYear.append(MonthSnow)
+
+    # Count records missing per snow season
+    Temp = []
+    for aRow in MonthsPerYear:
+        for aItem in aRow:
+            if aItem==11 or aItem==12 or aItem==1:
+                Temp.append(aItem)
+        WinterStats.append(len(Temp))
+        Temp = []
+    # Define winter stats years. Copy wouldn't work here.
+    for aItem in Sx:
+        WSY.append(aItem)
 
     # Write data for missing years. Estimates missing 365 records per
     # year. Overwrites leap years of 366 as 365 (not considered significant)
@@ -402,12 +413,15 @@ def Split_Data(Data, StationName, f, FirstYear, SnowData, RawData, BaseData, Mon
         if aRow>Xplace:
             Xplace=aRow
     plt.figure(figsize=(12,6))
-    plt.bar(Sx, MissingSnowData, align='center', alpha=0.5)
+    plt.bar(Sx, MissingSnowData, align='center', alpha=0.5, label = 'Total Missing Records')
+    plt.bar(Sx, WinterStats, align='center', alpha=1, color='r', label = 'Records Missing During Winter')
     plt.gca().yaxis.grid(True)
+
+    plt.legend(loc = 'upper right')
     plt.xticks(Sx, rotation='vertical')
-    plt.xlabel('Hydro Year')
+    plt.xlabel('Year')
     plt.ylabel('Missing Records')
-    plt.title('Missing Snowfall Records Per Hydro Year')
+    plt.title('Missing Snowfall Records Per Year')
     plt.text(1, Xplace, 'Percent Coverage For Study Period: %f' % 
         (PercentRCov), verticalalignment='top') 
     plt.savefig('%s/MissingSnowData.%s' % (OutputLoc, f), dpi=None, 
@@ -416,7 +430,6 @@ def Split_Data(Data, StationName, f, FirstYear, SnowData, RawData, BaseData, Mon
         frameon=None)
     # plt.show()
 
-    # Snowfall coverage insert for final data
     StationExports.append(PercentRCov)
     plt.close()
 
@@ -487,11 +500,5 @@ def Split_Data(Data, StationName, f, FirstYear, SnowData, RawData, BaseData, Mon
     StationExports.append(PercentRCov)
     plt.close()
 
-    #Snow only record
-    # print RawData
-    # WORK RawData is not being exported
-    for aRow in RawData:
-        if aRow[-5]!=0.0 and np.isnan(aRow[-5]) != True:
-            SnowData.append(aRow)
     RawData = copy.deepcopy(RawData)
     # print "END of SplitData"

@@ -90,18 +90,25 @@ def Temperature (RawData, StationName, f, BaseData, StationExports, OmitYearsT, 
     missingHL = []
     # Number of records missing all temperature data
     NullRecords = 0
+    # Count of days per month with records
+    DPM = []
+    # Temporary day count for DPM
+    DPMcount = 0
 
     for aRow in RawData:
         if index==(len(RawData)-1):
             if np.isnan(aRow[3]) != True and np.isnan(aRow[4]) != True:
                 TempVar = (aRow[3]+aRow[4])/2
                 MonthTemp.append(TempVar)
+                DPMcount = DPMcount+1
             if np.isnan(aRow[3]) != True or np.isnan(aRow[4]) != True:
                 MonthTemp.append(np.nan)
                 if np.isnan(aRow[5]) != True:
                     missingHL.append(index)
                 if np.isnan(aRow[5]) == True:
                     NullRecords = NullRecords+1
+            DPM.append(DPMcount)
+            DPMcount = 0
             YList.append(i)
             MonthList.append(M)
             MonthSTD.append(np.nanstd(MonthTemp))
@@ -111,6 +118,7 @@ def Temperature (RawData, StationName, f, BaseData, StationExports, OmitYearsT, 
                 if np.isnan(aRow[3]) != True and np.isnan(aRow[4]) != True:
                     TempVar = (aRow[3]+aRow[4])/2
                     MonthTemp.append(TempVar)
+                    DPMcount = DPMcount+1
                 if np.isnan(aRow[3]) != True or np.isnan(aRow[4]) != True:
                     MonthTemp.append(np.nan)
                     if np.isnan(aRow[5]) != True:
@@ -118,6 +126,8 @@ def Temperature (RawData, StationName, f, BaseData, StationExports, OmitYearsT, 
                     if np.isnan(aRow[5]) == True:
                         NullRecords = NullRecords+1
             if aRow[2]!=M:
+                DPM.append(DPMcount)
+                DPMcount = 0
                 MonthList.append(M)
                 YList.append(i)
                 if len(MonthTemp)!=0:
@@ -135,6 +145,7 @@ def Temperature (RawData, StationName, f, BaseData, StationExports, OmitYearsT, 
                 if np.isnan(aRow[3]) != True and np.isnan(aRow[4]) != True:
                     TempVar = (aRow[3]+aRow[4])/2
                     MonthTemp.append(TempVar)
+                    DPMcount = DPMcount+1
                 if np.isnan(aRow[3]) != True or np.isnan(aRow[4]) != True:
                     MonthTemp.append(np.nan)
                     if np.isnan(aRow[5]) != True:
@@ -143,7 +154,10 @@ def Temperature (RawData, StationName, f, BaseData, StationExports, OmitYearsT, 
                         NullRecords = NullRecords+1
             index = index+1
             M = aRow[2]
+        # Year change
         if aRow[0]!=i:
+            DPM.append(DPMcount)
+            DPMcount = 0
             MonthList.append(M)
             YList.append(i)
             MonthSTD.append(np.nanstd(MonthTemp))
@@ -155,6 +169,7 @@ def Temperature (RawData, StationName, f, BaseData, StationExports, OmitYearsT, 
             if np.isnan(aRow[3]) != True and np.isnan(aRow[4]) != True:
                 TempVar = (aRow[3]+aRow[4])/2
                 MonthTemp.append(TempVar)
+                DPMcount = DPMcount+1
             if np.isnan(aRow[3]) != True or np.isnan(aRow[4]) != True:
                 MonthTemp.append(np.nan)
                 if np.isnan(aRow[5]) != True:
@@ -162,11 +177,40 @@ def Temperature (RawData, StationName, f, BaseData, StationExports, OmitYearsT, 
                 if np.isnan(aRow[5]) == True:
                     NullRecords = NullRecords+1
 
+    # Remove records with less than 90 percent coverage
+    # Write full Date format for day count 
+    DATE = []
+    i = 0
+    for aRow in YList:
+        M = MonthList[i]
+        Y = aRow
+        Day = 1
+        TempDate = str(('%i-%i-%i') % (Y, Day, M))
+        TempDate = datetime.strptime(TempDate, '%Y-%d-%m')
+        DATE.append(TempDate)
+        i = i+1
+
+    # Write dataframe with monthly averages
     df = pd.DataFrame(MonthList, columns=['Month'])
     idx = 0
     df.insert(idx, column='Year', value=YList)
     df.insert(idx, column='STD', value=MonthSTD)
     df.insert(idx, column='Average', value=MonthAve)
+    #*********************Insert drop parameters
+    # Days counted for each month
+    df.insert(idx, column='Days_Count', value=DPM)
+    # Dates
+    df.insert(idx, column='Date', value=DATE)
+    # Count of days per month for given year
+    df['days_in_month'] = df['Date'].dt.daysinmonth
+    # Percentage coverage per month
+    df['MonthCoverage'] = df.Days_Count / df.days_in_month
+    # Drop records with less than 90 percent coverage
+    #********************* DROP RECORDS
+    df = df[df.MonthCoverage > 0.9]
+    # Remove extra columns used for the coverage check
+    df = df.drop(columns = ['MonthCoverage', 'days_in_month', 'Date', 'Days_Count'])
+
     GroupData = df.values.tolist()
     # Format [AverageT, STD, Year, Month]
     JanAve = []
@@ -268,6 +312,72 @@ def Temperature (RawData, StationName, f, BaseData, StationExports, OmitYearsT, 
             YearsDec.append(aRow[-2])
 
     # Seasonal stats
+
+    # Data Coverage
+    # WORK
+    # # Year index
+    # i = allData[0][0]
+    # # Month index
+    # M = allData[0][2]
+    # # List of years analyzed by loop
+    # YList = []
+    # # List of months in order of analysis
+    # MonthList = []
+    # # Count of records passed to count to final record for loop break
+    # index = 0
+    # # Count of days per month with records
+    # DPM = []
+    # # Temporary day count for DPM
+    # DPMcount = 0
+
+    # for aRow in allData:
+    #     if index==(len(RawData)-1):
+    #         if np.isnan(aRow[3]) != True and np.isnan(aRow[4]) != True:
+    #             DPMcount = DPMcount+1
+    #         MonthList.append(M)
+    #     if aRow[0]==i:
+    #         if aRow[2]==M:
+    #             if np.isnan(aRow[3]) != True and np.isnan(aRow[4]) != True:
+    #                 DPMcount = DPMcount+1
+    #         if aRow[2]!=M:
+    #             DPM.append(DPMcount)
+    #             DPMcount = 0
+    #             MonthList.append(M)
+    #             YList.append(i)
+    #             if np.isnan(aRow[3]) != True and np.isnan(aRow[4]) != True:
+    #                 DPMcount = DPMcount+1
+    #         index = index+1
+    #         M = aRow[2]
+    #     # Year change
+    #     if aRow[0]!=i:
+    #         DPM.append(DPMcount)
+    #         DPMcount = 0
+    #         MonthList.append(M)
+    #         YList.append(i)
+    #         index=index+1
+    #         M = aRow[2]
+    #         i = aRow[0]
+    #         if np.isnan(aRow[3]) != True and np.isnan(aRow[4]) != True:
+    #             DPMcount = DPMcount+1
+
+    # DATE = []
+    # i = 0
+    # for aRow in YList:
+    #     M = MonthList[i]
+    #     Y = aRow
+    #     Day = 1
+    #     TempDate = str(('%i-%i-%i') % (Y, Day, M))
+    #     TempDate = datetime.strptime(TempDate, '%Y-%d-%m')
+    #     DATE.append(TempDate)
+    #     i = i+1
+
+    # # temp = []
+    # # for aRow in allData:
+
+    # # df = pd.DataFrame(allData)
+    # # print df
+    # sys.exit()
+
 
     # Suggest data coverage check for this analysis
 
@@ -419,14 +529,41 @@ def Temperature (RawData, StationName, f, BaseData, StationExports, OmitYearsT, 
         print (" \n******Winter Temperature Analysis Miscalculation******\n ")
 
     # Annual Average
- 
+    
+    # Remove omitted years.
+
+    # Write list of years within dataset
+    temp = []
+    for aRow in RawData:
+        temp.append(aRow[-1])
+    # sift through years with counter
+    Sift = collections.Counter(temp)
+    # define keys (years)
+    StudyYearList = Sift.keys()
+    df = pd.DataFrame(RawData)
+    # Modify RawData to remove records containing dropyears.
+    # This writes a definition for this to be done.
+    def diff(list1, list2):
+        return list(set(list1).symmetric_difference(set(list2)))
+
+    list1 = StudyYearList
+    list2 = OmitYearsT
+    # Use the definition to determine records to drop
+    Diff = diff(list1, list2)
+    # Re-write dataframe without the ommitted years as ModData
+    df = df[df[6].isin(Diff)]
+    ModData = df.values.tolist()
+    # Convert final value back to int
+    for aRow in ModData:
+        aRow[-1]=int(aRow[-1])
+    
     TemperTemp = []
     AnnualYears = []
     AnnualAve = []
     AnnualSTD = []
-    i = RawData[0][-1]
+    i = ModData[0][-1]
     z = 0
-    for aRow in RawData:
+    for aRow in ModData:
         # if aRow[-1]!=OmitYearsT[z]:
         if aRow[-1]==i:
             if np.isnan(aRow[-3]) != True and np.isnan(aRow[-4]) != True:
@@ -445,20 +582,7 @@ def Temperature (RawData, StationName, f, BaseData, StationExports, OmitYearsT, 
             if np.isnan(aRow[-3]) != True and np.isnan(aRow[-4]) != True:
                 ave = (aRow[-3]+aRow[-4])/2
                 TemperTemp.append(ave)
-        # WORK WORK WORK
-        # Check for OmitYears to pass as nan
-        # This omit section is based upon missing data identified 
-        # by split data. Not complete
-        # if aRow[-1]==OmitYearsT[z]:
-        #     # print OmitYearsT[z]
-        #     AnnualSTD.append(np.std(np.nan))
-        #     AnnualAve.append(np.mean(np.nan))
-        #     AnnualYears.append(i)
-        #     print i
-        #     print aRow
-        #     sys.exit()
-        #     if z<len(OmitYearsT)-1:
-        #         z = z+1         
+   
     AnnualSTD.append(np.std(TemperTemp))
     AnnualAve.append(np.mean(TemperTemp))
     AnnualYears.append(i)

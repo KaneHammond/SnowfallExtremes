@@ -60,3 +60,31 @@ from scipy.stats import uniform
 import collections
 import tqdm
 import time
+
+### ************************************
+# ARIMA IMPORTS
+
+# try:
+#     import plotly
+# except:
+#     import pip
+#     # from pip import _internal as pip
+#     pip.main(['install','plotly'])
+#     # subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'stats'])
+# import plotly
+
+# import plotly.plotly as ply
+
+# try:
+#     import cufflinks
+# except:
+#     import pip
+#     # from pip import _internal as pip
+#     pip.main(['install','cufflinks'])
+#     # subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'stats'])
+# import cufflinks
+
+# import cufflinks as cf
+
+# from plotly.plotly import plot_mpl
+# from statsmodels.tsa.seasonal import seasonal_decompose

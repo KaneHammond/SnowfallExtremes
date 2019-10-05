@@ -6,8 +6,8 @@ sys.path.append("INPUT_DATA")
 sys.path.append("INPUT_DATA/Output")
 
 # Determine data location based upon data download method
-FilterOptions = ['Country', 'Station/City', 'State/Province', 'Coordinates']
-df = pd.DataFrame(FilterOptions,index=[1, 2, 3, 4], columns = ["SELECTION PARAMETERS"])
+FilterOptions = ['Country', 'Station/City', 'State/Province']
+df = pd.DataFrame(FilterOptions,index=[1, 2, 3], columns = ["SELECTION PARAMETERS"])
 print df
 print(' \n**********CHOOSE DATA SELECTION METHOD**********\n ')
 selection = 'INDEX'           
@@ -26,7 +26,7 @@ if not os.path.exists(dir):
 
 
 # Return csv of stations from query.
-if query>4 or query < 0:
+if query>3 or query < 0:
   print ('Choice Not Within Range')
   sys.exit()
 
@@ -51,10 +51,6 @@ if query==3:
   allStations = pd.read_csv("INPUT_DATA/Output/State_Province/StationInformation.csv",
     header=0, index_col=False)
   Import_Path = 'INPUT_DATA/Output/State_Province/'
-
-if query==4:
-  print('Currently Unavailable')
-  sys.exit()
 
 # Define lists of variables to be indexed and used for 
 # the looping analysis
@@ -85,9 +81,9 @@ if query == 2:
 
 # # Autorun
 # SE = 0.95
-# f = 'pdf'
-# FirstYear = 1941
-# FinalYear = 2000
+# f = 'png'
+# FirstYear = 1988
+# FinalYear = 2018
 # YearLabel = 'Year'
 
 # Prompt options for analysis
@@ -111,15 +107,22 @@ query = input('Define Final Year for Analysis (YYYY):')
 FinalYear = int(query)
 if FinalYear > 2018:
   print('%i Not a Valid Year' % (FinalYear))
+
+print ('*'*25)
+# Choose MonthX, the month that will be the first month of each year
+print ('Re-structure analysis years. For example, choose 1 (January) for standard years\nor 10 for Hydrological years.\n')
+query = raw_input('Define First Month of Each Year:')
+MonthX = int(query)
+# Not Written in as an option yet. This selects day and month to parse
+# the data by. 
+# MonthX = 7
 print ('*'*25)
 # Choose label for x-axis on graphing outputs using the custom
 # year clip (MonthX and Dayx).
 query = raw_input('Define Year Labels for x-axis on Figures (i.e. Hydro Year):')
 YearLabel = str(query)
 
-# Not Written in as an option yet. This selects day and month to parse
-# the data by. 
-MonthX = 7
+# Define Day each month will start at for MonthX
 Dayx = 1
 
 
@@ -356,6 +359,7 @@ for i in tqdm.tqdm(range(ProgBarLimit)):
   Data['TOBS'] = Data['TOBS'].apply(lambda x: x/10)
   Data['TMIN'] = Data['TMIN'].apply(lambda x: x/10)
   Data['TMAX'] = Data['TMAX'].apply(lambda x: x/10)
+  Data['PRCP'] = Data['PRCP'].apply(lambda x: x/10)
   Data = Data.values.tolist()
   # Loop analysis
   # Specified to pass stations with errors
@@ -364,7 +368,7 @@ for i in tqdm.tqdm(range(ProgBarLimit)):
       from SplitData import *
       Split_Data(Data, StationName, f, FirstYear, RawData, 
         BaseData, MonthX, Dayx, StationExports, OmitYearsT, FinalYear,
-        WinterStats, WSY, MissingSnowData)
+        WinterStats, WSY, MissingSnowData, YearLabel)
     except:
       pass
     try:
@@ -380,6 +384,13 @@ for i in tqdm.tqdm(range(ProgBarLimit)):
       # FinalData.append(StationExports)
     except:
       pass
+    # try:
+    #   from Rainfall import *
+    #   Rainfall(StationName, RawData, SE, f, 
+    #     StationExports, Dayx, MonthX, YearLabel, WinterStats, WSY,
+    #     MissingSnowData, BaseData)
+    # except:
+    #   pass
     if len(StationExports)==len(Header):
       FinalData.append(StationExports)
     if len(StationExports)!=len(Header):
@@ -393,7 +404,7 @@ for i in tqdm.tqdm(range(ProgBarLimit)):
     from SplitData import *
     Split_Data(Data, StationName, f, FirstYear, RawData, 
       BaseData, MonthX, Dayx, StationExports, OmitYearsT, FinalYear,
-      WinterStats, WSY, MissingSnowData)
+      WinterStats, WSY, MissingSnowData, YearLabel)
 
     from Snowfall_Analysis import *
     SnowFallAnalysis(StationName, RawData, SE, f, 
@@ -402,7 +413,13 @@ for i in tqdm.tqdm(range(ProgBarLimit)):
 
     from Temperature_Analysis import *
     Temperature(RawData, StationName, f, BaseData, StationExports, OmitYearsT, YearLabel)
-    # FinalData.append(StationExports)
+    FinalData.append(StationExports)
+      
+    # from Rainfall import *
+    # Rainfall(StationName, RawData, SE, f, 
+    #   StationExports, Dayx, MonthX, YearLabel, WinterStats, WSY,
+    #   MissingSnowData, BaseData)
+
     if len(StationExports)==len(Header):
       FinalData.append(StationExports)
     if len(StationExports)!=len(Header):

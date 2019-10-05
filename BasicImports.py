@@ -4,7 +4,9 @@ import os
 import shutil
 import copy
 import subprocess
-
+import math
+import pylab as pl
+import matplotlib.mlab as mlab
 # try:
 #     try:
 #         import datetime
@@ -42,12 +44,12 @@ except:
     import pip
     pip.main(['install','pandas'])
     import pandas as pd
-try:
-    import seaborn as sns
-except:
-    import pip
-    pip.main(['install','seaborn'])
-    import seaborn as sns
+# try:
+#     import seaborn as sns
+# except:
+#     import pip
+#     pip.main(['install','seaborn'])
+#     import seaborn as sns
 try:
     import scipy
 except:

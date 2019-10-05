@@ -34,8 +34,8 @@ sys.path.append("DataModules")
 # from ImportFTP import*
 # print df
 
-FilterOptions = ['Country', 'Station/City', 'State/Province', 'Coordinates']
-df = pd.DataFrame(FilterOptions,index=[1, 2, 3, 4], columns = ["SELECTION PARAMETERS"])
+FilterOptions = ['Country', 'Station/City', 'State/Province']
+df = pd.DataFrame(FilterOptions,index=[1, 2, 3], columns = ["SELECTION PARAMETERS"])
 
 print(' \n**********CHOOSE DATA SELECTION METHOD**********\n ')
 selection = 'INDEX'						
@@ -67,7 +67,3 @@ if query==2:
 if query==3:
 	import State_Province
 	State_Province
-
-if query==4:
-	print "Module missing or incomplete"
-	sys.exit()	

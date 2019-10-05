@@ -552,6 +552,7 @@ def Temperature (RawData, StationName, f, BaseData, StationExports, OmitYearsT, 
     Diff = diff(list1, list2)
     # Re-write dataframe without the ommitted years as ModData
     df = df[df[6].isin(Diff)]
+
     ModData = df.values.tolist()
     # Convert final value back to int
     for aRow in ModData:

@@ -1,7 +1,7 @@
 from BasicImports import *
 def Split_Data(Data, StationName, f, FirstYear, RawData, 
     BaseData, MonthX, DayX, StationExports, OmitYearsT, FinalYear,
-    WinterStats, WSY, MissingSnowData):
+    WinterStats, WSY, MissingSnowData, YearLabel):
     # This File processes raw data for analysis
     # by removing records without snowfall and 
     # defining hydrological years.
@@ -56,7 +56,7 @@ def Split_Data(Data, StationName, f, FirstYear, RawData,
             if aRow[0]<=FinalYear:
                 BaseData.append(aRow)
     #***************************************TRIM YEARS*********************
-    #***************************************&HYDRO YEARS&*************************
+  
     #*****Format [Year, DD, MM, Precip, Snow, Tmax, Tmin, TOBS]
     # Defines the hydrological years (Starting in October ending last day of Sepetember)
     # Filter out dates only greater than or equal to defined year(from query)
@@ -326,12 +326,13 @@ def Split_Data(Data, StationName, f, FirstYear, RawData,
     PercentMissing = float(sum(MissingTempData))/TotalDays
     PercentRCov = (1-PercentMissing)*100
     plt.figure(figsize=(12,6))
-    plt.bar(Tx, MissingTempData, align='center', alpha=0.5)
+    plt.bar(Tx, MissingTempData, align='center', alpha=0.5, label='Missing Temperature Records')
     plt.gca().yaxis.grid(True)
     plt.xticks(Tx, rotation='vertical')
-    plt.xlabel('Hydro Year')
+    plt.xlabel(YearLabel)
     plt.ylabel('Missing Records')
-    plt.title('Missing Temperature Records Per Hydro Year')
+    plt.legend(loc = 'upper right')
+    plt.title('Missing Temperature Records Per %s' % (YearLabel))
     plt.text(1, Xplace, 'Percent Coverage For Study Period: %f' % 
         (PercentRCov), verticalalignment='top') 
     plt.savefig('%s/MissingTempData.%s' % (OutputLoc, f), dpi=None, 
@@ -352,7 +353,7 @@ def Split_Data(Data, StationName, f, FirstYear, RawData,
     # MissingSnowData Dataset containing count of missing records per year
     Sx = [] # The x axis value set of hydro years
     Temp = 0
-    HY = 1 # Hydro Year
+    HY = 1 # Year Clip
     MonthSnow = []
     MonthsPerYear = []
     for aRow in RawData:
@@ -373,66 +374,88 @@ def Split_Data(Data, StationName, f, FirstYear, RawData,
     Sx.append(HY)
     MissingSnowData.append(Temp)
     MonthsPerYear.append(MonthSnow)
-
+    # WORK
     # Count records missing per snow season
-    Temp = []
-    for aRow in MonthsPerYear:
-        for aItem in aRow:
-            if aItem==11 or aItem==12 or aItem==1:
-                Temp.append(aItem)
-        WinterStats.append(len(Temp))
+    if MonthX != 1:
         Temp = []
-    # Define winter stats years. Copy wouldn't work here.
-    for aItem in Sx:
-        WSY.append(aItem)
+        for aRow in MonthsPerYear:
+            for aItem in aRow:
+                if aItem==11 or aItem==12 or aItem==1:
+                    Temp.append(aItem)
+            WinterStats.append(len(Temp))
+            Temp = []
+        # Define winter stats years. Copy wouldn't work here.
+        for aItem in Sx:
+            WSY.append(aItem)
 
-    # Write data for missing years. Estimates missing 365 records per
-    # year. Overwrites leap years of 366 as 365 (not considered significant)
-    temp = set(Sx).symmetric_difference(set(FullHY))
-    temp = list(temp)
-    # Write a value of 365 for each year missing
-    MissingYears = []
-    for aRow in temp:
-        MissingYears.append(365)
-    # Write dataframes for missing years and data covereage within 
-    # present records.
-    df = pd.DataFrame({"a" : MissingYears, "b" : temp})
-    df2 = pd.DataFrame({"a" : MissingSnowData, "b" : Sx})
-    # Combine these based upon hydro year.
-    Tdf = pd.merge(df, df2, how='outer')
-    Tdf = Tdf.sort_values('b')
-    # Write these columns to list (order will be sorted in graph)
-    MissingSnowData = Tdf['a'].values.tolist()
-    Sx = Tdf['b'].values.tolist()
+        # Write data for missing years. Estimates missing 365 records per
+        # year. Overwrites leap years of 366 as 365 (not considered significant)
+        temp = set(Sx).symmetric_difference(set(FullHY))
+        temp = list(temp)
+        # Write a value of 365 for each year missing
+        MissingYears = []
+        for aRow in temp:
+            MissingYears.append(365)
+        # Write dataframes for missing years and data covereage within 
+        # present records.
+        df = pd.DataFrame({"a" : MissingYears, "b" : temp})
+        df2 = pd.DataFrame({"a" : MissingSnowData, "b" : Sx})
+        # Combine these based upon hydro year.
+        Tdf = pd.merge(df, df2, how='outer')
+        Tdf = Tdf.sort_values('b')
+        # Write these columns to list (order will be sorted in graph)
+        MissingSnowData = Tdf['a'].values.tolist()
+        Sx = Tdf['b'].values.tolist()
 
-    PercentMissing = float(sum(MissingSnowData))/TotalDays
-    PercentRCov = (1-PercentMissing)*100
-    # Xplace defines location on y axis to place text
-    Xplace = 0
-    for aRow in MissingSnowData:
-        if aRow>Xplace:
-            Xplace=aRow
-    plt.figure(figsize=(12,6))
-    plt.bar(Sx, MissingSnowData, align='center', alpha=0.5, label = 'Total Missing Records')
-    plt.bar(Sx, WinterStats, align='center', alpha=1, color='r', label = 'Records Missing During Winter')
-    plt.gca().yaxis.grid(True)
+        PercentMissing = float(sum(MissingSnowData))/TotalDays
+        PercentRCov = (1-PercentMissing)*100
+        # Xplace defines location on y axis to place text
+        Xplace = 0
+        for aRow in MissingSnowData:
+            if aRow>Xplace:
+                Xplace=aRow
+        plt.figure(figsize=(12,6))
+        plt.bar(Sx, MissingSnowData, align='center', alpha=0.5, label = 'Total Missing Records')
+        plt.bar(Sx, WinterStats, align='center', alpha=1, color='r', label = 'Records Missing During Winter')
+        plt.gca().yaxis.grid(True)
 
-    plt.legend(loc = 'upper right')
-    plt.xticks(Sx, rotation='vertical')
-    plt.xlabel('Year')
-    plt.ylabel('Missing Records')
-    plt.title('Missing Snowfall Records Per Year')
-    plt.text(1, Xplace, 'Percent Coverage For Study Period: %f' % 
-        (PercentRCov), verticalalignment='top') 
-    plt.savefig('%s/MissingSnowData.%s' % (OutputLoc, f), dpi=None, 
-        facecolor='w', edgecolor='b', orientation='portrait', papertype=None, 
-        format=None, transparent=False, bbox_inches=None, pad_inches=0.1, 
-        frameon=None)
-    # plt.show()
+        plt.legend(loc = 'upper right')
+        plt.xticks(Sx, rotation='vertical')
+        plt.xlabel(YearLabel)
+        plt.ylabel('Missing Records')
+        plt.title('Missing Snowfall Records Per %s' % (YearLabel))
+        plt.text(1, Xplace, 'Percent Coverage For Study Period: %f' % 
+            (PercentRCov), verticalalignment='top') 
+        plt.savefig('%s/MissingSnowData.%s' % (OutputLoc, f), dpi=None, 
+            facecolor='w', edgecolor='b', orientation='portrait', papertype=None, 
+            format=None, transparent=False, bbox_inches=None, pad_inches=0.1, 
+            frameon=None)
+        # plt.show()
 
-    StationExports.append(PercentRCov)
-    plt.close()
+        StationExports.append(PercentRCov)
+        plt.close()
 
+    # WORK
+    if MonthX == 1:
+        plt.figure(figsize=(12,6))
+        plt.bar(Sx, MissingSnowData, align='center', alpha=0.5, label = 'Total Missing Records')
+        plt.gca().yaxis.grid(True)
+
+        plt.legend(loc = 'upper right')
+        plt.xticks(Sx, rotation='vertical')
+        plt.xlabel(YearLabel)
+        plt.ylabel('Missing Records')
+        plt.title('Missing Snowfall Records Per %s' % (YearLabel))
+        plt.text(1, Xplace, 'Percent Coverage For Study Period: %f' % 
+            (PercentRCov), verticalalignment='top') 
+        plt.savefig('%s/MissingSnowData.%s' % (OutputLoc, f), dpi=None, 
+            facecolor='w', edgecolor='b', orientation='portrait', papertype=None, 
+            format=None, transparent=False, bbox_inches=None, pad_inches=0.1, 
+            frameon=None)
+        # plt.show()
+
+        StationExports.append(PercentRCov)
+        plt.close()
 
     # ***************************Missing Rainfall Data
     # ***************************Missing Rainfall Data
@@ -483,12 +506,13 @@ def Split_Data(Data, StationName, f, FirstYear, RawData,
         if aRow>Xplace:
             Xplace=aRow
     plt.figure(figsize=(12,6))
-    plt.bar(Rx, MissingRainData, align='center', alpha=0.5)
+    plt.bar(Rx, MissingRainData, align='center', alpha=0.5, label='Missing Rainfall Records')
     plt.gca().yaxis.grid(True)
     plt.xticks(Rx, rotation='vertical')
-    plt.xlabel('Hydro Year')
+    plt.xlabel(YearLabel)
     plt.ylabel('Missing Records')
-    plt.title('Missing Rain Records Per Hydro Year')
+    plt.legend(loc = 'upper right')
+    plt.title('Missing Rain Records Per %s' % (YearLabel))
     plt.text(1, Xplace, 'Percent Coverage For Study Period: %f' % 
         (PercentRCov), verticalalignment='top') 
     plt.savefig('%s/MissingRainData.%s' % (OutputLoc, f), dpi=None, 

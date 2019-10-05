@@ -53,3 +53,32 @@ The end results will be figures for every station in the file format you define,
 well as a total output csv including coordinates for each station. This will allow you
 to import it into mapping software for a spatial analysis, or import into another 
 program.
+
+What this program outputs:
+
+Data Coverage: 
+  Snowfall
+  Temperature
+  Rain
+
+Snowfall:
+  Annual Average
+  Annual Average STD (Average standard deviation between events for a given year)
+  CDF of Snowfall Events
+  Extreme Events annually
+  Annual Snowdays
+  Season End dates
+  Season Start dates
+  Seasno lenght (Defined as first snowfall to last for a given year)
+  
+Temperature:
+  Annual Averages
+  Annual STD
+  Monthly Averages over time
+  Monthly STD over time
+  Seasonal Averages over time
+  Seasonal STD over time
+
+NOTED: This data is supported by a TotalOutSO.csv as well as figures in the
+file format requested. I typically use .png, they load more rapidly.
+

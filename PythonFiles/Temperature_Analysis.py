@@ -14,6 +14,8 @@ def Temperature (RawData, StationName, f, BaseData, StationExports, OmitYearsT, 
 
     NameX = 'Years'
 
+    # Deep copy the data to return it in correct format at end
+    allDataF = copy.deepcopy(RawData)
 
     # Ensure clipping of years missing data. SplitData initially does this.
     # However, the modification is overwritten/forgotten prior to use by this 
@@ -2004,5 +2006,8 @@ def Temperature (RawData, StationName, f, BaseData, StationExports, OmitYearsT, 
     StationExports.append(p_value)
     StationExports.append(r_value)
     plt.close()
+
+    RawData = copy.deepcopy(allDataF)
+    allDataF = []
 
     # print ("END of Temperature Analysis")

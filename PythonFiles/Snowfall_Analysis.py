@@ -2,7 +2,7 @@ from BasicImports import *
 
 def SnowFallAnalysis(StationName, RawData, SE, f, 
     StationExports, Dayx, MonthX, YearLabel, WinterStats, WSY,
-    MissingSnowData, BaseData, SingleYearSnowfall):
+    MissingSnowData, BaseData, SingleYearSnowfall, EE, StandardSnow):
     
     # This ignores all numpy errors. Used to ignore NaN errors.
     # Implemented since NaN values are used to fill empty data.
@@ -309,6 +309,23 @@ def SnowFallAnalysis(StationName, RawData, SE, f,
 
     #*************************************************************************
 
+    # # Extract to Standard Snowfall list output: StandardSnow
+    # YearsForExtract = []
+    # # Define limit for the range, add one in the loop 
+    # # since we will skip 0 (the standard start point)
+    # Limit = allData[-1][-1]
+    # # For an incriment in limit we will add z to the years list
+    # for z in range(1, Limit+1):
+    #     YearsForExtract.append(z)
+    
+    # i=0
+    # while i < Limit:
+    #     StandardSnow.append([AnnualSnowFall[i], SnowDays[i], 
+    #         DailyAverage[i], YearsForExtract[i]])
+    #     i = i+1
+
+    # print StandardSnow
+    # sys.exit()
     #*********************************#Calculate Daily Averages Per Year*************
     YSFarray=np.array(AnnualSnowFall, dtype=np.float) #Defines an array of AnnualSnowFall data
     SDarray=np.array(SnowDays, dtype=np.float) #Defines an array of snowDays data
@@ -317,7 +334,12 @@ def SnowFallAnalysis(StationName, RawData, SE, f,
     #*****************************Entire Study Period Standard Deviations*************
     TotalDailyAveS=np.nanmean(DailyAverage, dtype=np.float) #Calculates daily average of entire period.
     StandardDevDA = np.nanstd(DailyAverage, dtype=np.float) #Calcualtes std of total study period daily snowfall averages
+    #*****************************Format for extraction***********************************
+    Ext1 = copy.deepcopy(AnnualSnowFall)
+    Ext2 = copy.deepcopy(SnowDays)
+    Ext3 = np.ndarray.tolist(DailyAverage)
     #*****************************Start and End Dates**************************
+
 
     # END AND START DATES PER SEASON
     # print StartDates
@@ -481,6 +503,11 @@ def SnowFallAnalysis(StationName, RawData, SE, f,
 
     if len(DayStart)!=len(DayEnd):
         print (" \n******Error Calculating Snow Start and End Positions****** \n")
+
+    #******************************** Format for extraction ********************************
+    Ext4 = copy.deepcopy(StartDates)
+    Ext5 = copy.deepcopy(EndDates)
+    Ext6 = copy.deepcopy(SeasonLen)
 
     #*********************************Extreme Events CDF******************************
 
@@ -664,36 +691,43 @@ def SnowFallAnalysis(StationName, RawData, SE, f,
     StationExports.append(r_value)
     plt.close()
     ##********************* Snow Season Length
-    SeasonLen = np.array(SeasonLen)
-    mask = ~np.isnan(x) & ~np.isnan(SeasonLen)
+    # If standar years are chosen, this will not work
+    try:
+        SeasonLen = np.array(SeasonLen)
+        mask = ~np.isnan(x) & ~np.isnan(SeasonLen)
 
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
-    ax.grid(True)
-    ax.text(.5, 1.1, 'Station: %s' % (StationName), verticalalignment='center', 
-        horizontalalignment='center', transform=ax.transAxes, fontsize=12,
-        fontweight=None, color='black')
-    fig.subplots_adjust(top=0.85)
-    ax.set_xlabel(YearLabel)
-    ax.set_ylabel('Days')
-    ax.set_title('Length of Snow Seasons', fontweight='bold')
-    plt.plot(x,SeasonLen,  '-')
-    slope, intercept, r_value, p_value, std_err = stats.linregress(x[mask],SeasonLen[mask])
-    plt.plot(x,intercept+slope*x, 'r')
-    ax.text(0.95, 0.008, 'Trendline Slope: %f P Value: %f RSqrd Value: %f' 
-        % (slope, p_value, r_value), verticalalignment='bottom', 
-        horizontalalignment='right', transform=ax.transAxes, fontsize=8)
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        ax.grid(True)
+        ax.text(.5, 1.1, 'Station: %s' % (StationName), verticalalignment='center', 
+            horizontalalignment='center', transform=ax.transAxes, fontsize=12,
+            fontweight=None, color='black')
+        fig.subplots_adjust(top=0.85)
+        ax.set_xlabel(YearLabel)
+        ax.set_ylabel('Days')
+        ax.set_title('Length of Snow Seasons', fontweight='bold')
+        plt.plot(x,SeasonLen,  '-')
+        slope, intercept, r_value, p_value, std_err = stats.linregress(x[mask],SeasonLen[mask])
+        plt.plot(x,intercept+slope*x, 'r')
+        ax.text(0.95, 0.008, 'Trendline Slope: %f P Value: %f RSqrd Value: %f' 
+            % (slope, p_value, r_value), verticalalignment='bottom', 
+            horizontalalignment='right', transform=ax.transAxes, fontsize=8)
 
-    plt.savefig('%s/SnowSeasonLen.%s' % (dir, f), dpi=None, 
-        facecolor='w', edgecolor='b', orientation='portrait', papertype=None, 
-        format=None, transparent=False, bbox_inches=None, pad_inches=0.1, 
-        frameon=None)
-    StationExports.append(slope)
-    StationExports.append(p_value)
-    StationExports.append(r_value)
-    plt.close()
-
+        plt.savefig('%s/SnowSeasonLen.%s' % (dir, f), dpi=None, 
+            facecolor='w', edgecolor='b', orientation='portrait', papertype=None, 
+            format=None, transparent=False, bbox_inches=None, pad_inches=0.1, 
+            frameon=None)
+        StationExports.append(slope)
+        StationExports.append(p_value)
+        StationExports.append(r_value)
+        plt.close()
+    except:
+        pass
     ##********************* Extreme Snow Events CDF
+    # Extract events
+    EED = []
+    for aItem in ExtremeEventsPerYearCDF:
+        EED.append(aItem)
     ExtremeEventsPerYearCDF = np.array(ExtremeEventsPerYearCDF)
     mask = ~np.isnan(x) & ~np.isnan(ExtremeEventsPerYearCDF)
 
@@ -797,6 +831,15 @@ def SnowFallAnalysis(StationName, RawData, SE, f,
     # plt.show()
     plt.close()
 
+    # Push data in memory out for next analysis:
+
+    # Export the EE data per year, this will be used later in other sections
+    i = 0
+    for Year in x:
+        EE.append([Year, EED[i]])
+        i = i+1
+
+    # Export the rest of the data
 
     ###**************Additional Data Check****************
     ###**************Additional Data Check****************
@@ -804,6 +847,41 @@ def SnowFallAnalysis(StationName, RawData, SE, f,
     # MissingYears consists of years with less than 2 records of snowfall
     StationExports.append(len(MissingYears))
 
+    # Export the EE data per year, this will be used later in other sections
+    i = 0
+    for Year in x:
+        EE.append([Year, EED[i]])
+        i = i+1
+
+    # Export the rest of the data
+
+    # Extract to Standard Snowfall list output: StandardSnow
+    YearsForExtract = []
+    # Define limit for the range, add one in the loop 
+    # since we will skip 0 (the standard start point)
+    Limit = allData[-1][-1]
+    # For an incriment in limit we will add z to the years list
+    for z in range(1, Limit+1):
+        YearsForExtract.append(z)
+    
+    # Definitions
+    # Ext1: Annual Snowfall
+    # Ext2: Snow Days
+    # Ext3: Daily Average
+    # Ext4: Start dates
+    # Ext5: End dates
+    # Ext6: Season Length
+    # Format: [Annual Snowfall, Snow Days, Daily Ave, Start D, End D, Season Length]
+    i=0
+    while i < Limit:
+        StandardSnow.append([Ext1[i], Ext2[i], Ext3[0][i], Ext4[i], Ext5[i], 
+            Ext6[i], YearsForExtract[i]])
+        # print i
+        i = i+1
+
+    # print StandardSnow
+
+    ############################################# DATA GAP ANALYSIS ###################
 
     # Data gap can mean no winter data was available or all records were 0.0.
     # This section is not best used for larger data processing. 
@@ -964,7 +1042,7 @@ def SnowFallAnalysis(StationName, RawData, SE, f,
     # print ("END of Snowfall Analysis")
 
 ########
-# List of stuff for possible future use
+# List of stuff for possible future use:
 # SDarray
 # YSFarray
 # ExtremeEventsPerYearCDF

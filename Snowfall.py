@@ -5,18 +5,20 @@ sys.path.append("PythonFiles")
 sys.path.append("INPUT_DATA")
 sys.path.append("INPUT_DATA/Output")
 
-# Determine data location based upon data download method
-FilterOptions = ['Country', 'Station/City', 'State/Province']
-df = pd.DataFrame(FilterOptions,index=[1, 2, 3], columns = ["SELECTION PARAMETERS"])
-print df
-print(' \n**********CHOOSE DATA SELECTION METHOD**********\n ')
-selection = 'INDEX'           
-Data = 'SELECTION PARAMETERS'
-query = input('Which method was used to download the data?:')
-query = int(query)
+############################# Mute for autorun
+# # Determine data location based upon data download method
+# FilterOptions = ['Country', 'Station/City', 'State/Province']
+# df = pd.DataFrame(FilterOptions,index=[1, 2, 3], columns = ["SELECTION PARAMETERS"])
+# print df
+# print(' \n**********CHOOSE DATA SELECTION METHOD**********\n ')
+# selection = 'INDEX'           
+# Data = 'SELECTION PARAMETERS'
+# query = input('Which method was used to download the data?:')
+# query = int(query)
+############################ Mute for autorun
 
-# # Autorun
-# query = 2
+# Autorun
+query = 2
 
 # Write main output folder
 dir = 'Output'
@@ -80,47 +82,50 @@ if query == 2:
   Name = Data[1]
 
 # # Autorun
-# SE = 0.95
-# f = 'png'
-# FirstYear = 1988
-# FinalYear = 2018
-# YearLabel = 'Year'
+SE = 0.95
+f = 'png'
+FirstYear = 1950
+FinalYear = 2018
+YearLabel = 'Year'
+MonthX = 9
 
-# Prompt options for analysis
-print ('*'*25)
-# Define the cdf limit for the snowfall extremes
-query = input('Select CDF Limit For Snowfall Extremes (i.e. 0.95):')
-SE = float(query)
-print ('*'*25)
-# Choose file extension for graphing outputs
-query = raw_input('Define File Extention For Saved Figures (i.e. pdf):')
-f = str(query)
-print ('*'*25)
-# Define start year for clipping data
-query = input('Define Starting Year for Analysis (YYYY):')
-FirstYear = int(query)
-if FirstYear > 2018:
-  print('%i Not a Valid Year' % (FirstYear))
-print ('*'*25)
-# Define final year for clipping data
-query = input('Define Final Year for Analysis (YYYY):')
-FinalYear = int(query)
-if FinalYear > 2018:
-  print('%i Not a Valid Year' % (FinalYear))
+############################## Mute for autorun
 
-print ('*'*25)
-# Choose MonthX, the month that will be the first month of each year
-print ('Re-structure analysis years. For example, choose 1 (January) for standard years\nor 10 for Hydrological years.\n')
-query = raw_input('Define First Month of Each Year:')
-MonthX = int(query)
-# Not Written in as an option yet. This selects day and month to parse
-# the data by. 
-# MonthX = 7
-print ('*'*25)
-# Choose label for x-axis on graphing outputs using the custom
-# year clip (MonthX and Dayx).
-query = raw_input('Define Year Labels for x-axis on Figures (i.e. Hydro Year):')
-YearLabel = str(query)
+# # Prompt options for analysis
+# print ('*'*25)
+# # Define the cdf limit for the snowfall extremes
+# query = input('Select CDF Limit For Snowfall Extremes (i.e. 0.95):')
+# SE = float(query)
+# print ('*'*25)
+# # Choose file extension for graphing outputs
+# query = raw_input('Define File Extention For Saved Figures (i.e. pdf):')
+# f = str(query)
+# print ('*'*25)
+# # Define start year for clipping data
+# query = input('Define Starting Year for Analysis (YYYY):')
+# FirstYear = int(query)
+# if FirstYear > 2018:
+#   print('%i Not a Valid Year' % (FirstYear))
+# print ('*'*25)
+# # Define final year for clipping data
+# query = input('Define Final Year for Analysis (YYYY):')
+# FinalYear = int(query)
+# if FinalYear > 2018:
+#   print('%i Not a Valid Year' % (FinalYear))
+
+# print ('*'*25)
+# # Choose MonthX, the month that will be the first month of each year
+# print ('Re-structure analysis years. For example, choose 1 (January) for standard years\nor 10 for Hydrological years.\n')
+# query = raw_input('Define First Month of Each Year:')
+# MonthX = int(query)
+# # Not Written in as an option yet. This selects day and month to parse
+# # the data by. 
+# # MonthX = 7
+# print ('*'*25)
+# # Choose label for x-axis on graphing outputs using the custom
+# # year clip (MonthX and Dayx).
+# query = raw_input('Define Year Labels for x-axis on Figures (i.e. Hydro Year):')
+# YearLabel = str(query)
 
 # Define Day each month will start at for MonthX
 Dayx = 1
@@ -202,6 +207,10 @@ for i in tqdm.tqdm(range(ProgBarLimit)):
   MissingSnowData = []
   # Write a list for season rejected containing one snow day
   SingleYearSnowfall = []
+  # Write list for number of ee events per year
+  EE = []
+  # Export list for the majority of snowfall data
+  StandardSnow = []
 
   if Path == 1:
     StationExports.append(Stations[i])
@@ -241,17 +250,16 @@ for i in tqdm.tqdm(range(ProgBarLimit)):
   if Path == 2:
     Data = pd.read_csv((Import_Path+'/'+Stations+'.csv'), header=0)
   
-
   # Format to meet current program design ([Date, PRCP, SNOW, TMAX, TMIN, TOBS])
   Data = Data.drop(columns=['ID', 'YEAR', 'MONTH', 'DAY'])
   try:
     Data = Data[['MM/DD/YYYY', 'PRCP', 'SNOW', 'TMAX', 'TMIN', 'TOBS']]
   except:
-    Data = Data[['MM/DD/YYYY', 'SNOW', 'TMAX', 'TMIN']]
-    Data['PRCP'] = np.nan
-    Data['TOBS'] = np.nan
+    if 'TOBS' not in Data:
+      Data['TOBS'] = np.nan
+    if 'PRCP' not in Data:
+      Data['PRCP'] = np.nan
     Data = Data[['MM/DD/YYYY', 'PRCP', 'SNOW', 'TMAX', 'TMIN', 'TOBS']]
-
   # Fill in missing dates with nan records to close data gaps.
 
   # Define range of dates in dataset
@@ -283,6 +291,7 @@ for i in tqdm.tqdm(range(ProgBarLimit)):
   # Python code the get difference of two lists 
   # Not using set()
   list2 = idxForm
+
   list1 = indexForm
   def diff(list1, list2):
       c = set(list1).union(set(list2))  # or c = set(list1) | set(list2)
@@ -324,12 +333,26 @@ for i in tqdm.tqdm(range(ProgBarLimit)):
   df3 = pd.DataFrame({'FixedDate' : Fix})
   df4 = df2.join(df3, how='outer')
 
+  ###############################################################################
   # This list is equivalent to the dates already in the set.
   # due to format issue, the dates had to be processed seprately.
   # This inserts a copy of the dates present, but in a different format.
   # (Formatted as indexForm)
-  Data['NewDate'] = list1
- 
+
+  # Make list of index
+  i = 0
+  IFix = []
+  for aItem in list1:
+    IFix.append(i)
+    i = i+1
+
+  # Failed 12/8/19
+  # Data['NewDate'] = list1
+
+  
+  Data.loc[IFix,'NewDate'] = list1
+  # print Data
+ ##################################################################################
   # Merge Data with the df containing the missing data. This
   # writes DataFull.
   DataFull = df.merge(Data, on='NewDate',
@@ -375,7 +398,7 @@ for i in tqdm.tqdm(range(ProgBarLimit)):
       from Snowfall_Analysis import *
       SnowFallAnalysis(StationName, RawData, SE, f, 
         StationExports, Dayx, MonthX, YearLabel, WinterStats, WSY,
-        MissingSnowData, BaseData, SingleYearSnowfall)
+        MissingSnowData, BaseData, SingleYearSnowfall, EE, StandardSnow)
     except:
       pass
     try:
@@ -409,16 +432,19 @@ for i in tqdm.tqdm(range(ProgBarLimit)):
     from Snowfall_Analysis import *
     SnowFallAnalysis(StationName, RawData, SE, f, 
       StationExports, Dayx, MonthX, YearLabel, WinterStats, WSY,
-      MissingSnowData, BaseData, SingleYearSnowfall)
+      MissingSnowData, BaseData, SingleYearSnowfall, EE, StandardSnow)
+
+    # Place before temp section as the data for precip will be removed in temp
+    from Rainfall import *
+    Rainfall(StationName, RawData, SE, f, 
+      StationExports, Dayx, MonthX, YearLabel, WinterStats, WSY,
+      MissingSnowData, BaseData, EE, StandardSnow)
+
 
     from Temperature_Analysis import *
     Temperature(RawData, StationName, f, BaseData, StationExports, OmitYearsT, YearLabel)
     FinalData.append(StationExports)
       
-    # from Rainfall import *
-    # Rainfall(StationName, RawData, SE, f, 
-    #   StationExports, Dayx, MonthX, YearLabel, WinterStats, WSY,
-    #   MissingSnowData, BaseData)
 
     if len(StationExports)==len(Header):
       FinalData.append(StationExports)

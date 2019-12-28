@@ -84,10 +84,10 @@ if query == 2:
 # # Autorun
 SE = 0.95
 f = 'png'
-FirstYear = 1950
+FirstYear = 1969
 FinalYear = 2018
 YearLabel = 'Year'
-MonthX = 9
+MonthX = 12
 
 ############################## Mute for autorun
 
@@ -435,8 +435,8 @@ for i in tqdm.tqdm(range(ProgBarLimit)):
       MissingSnowData, BaseData, SingleYearSnowfall, EE, StandardSnow)
 
     # Place before temp section as the data for precip will be removed in temp
-    from Rainfall import *
-    Rainfall(StationName, RawData, SE, f, 
+    from Seasonality import *
+    Seasonality(StationName, RawData, SE, f, 
       StationExports, Dayx, MonthX, YearLabel, WinterStats, WSY,
       MissingSnowData, BaseData, EE, StandardSnow)
 

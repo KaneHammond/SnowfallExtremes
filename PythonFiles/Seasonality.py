@@ -1,6 +1,6 @@
 from BasicImports import *
 
-def Rainfall(StationName, RawData, SE, f, 
+def Seasonality(StationName, RawData, SE, f, 
       StationExports, Dayx, MonthX, YearLabel, WinterStats, WSY,
       MissingSnowData, BaseData, EE, StandardSnow):
 	# Format: RAWDATA [Year, DD, MM, Precip, Snow, Tmax, Tmin, TOBS, Hydro Year]
@@ -418,6 +418,110 @@ def Rainfall(StationName, RawData, SE, f,
 	plt.close()
 	# sys.exit()
 
+	##################################### Plot seasonal precip by year
+
+	# Monthly values
+
+	# January not appending correctly 
+
+	Jan = []
+	Feb = []
+	Mar = []
+	Apr = []
+	May = []
+	Jun = []
+	Jul = []
+	Aug = []
+	Sep = []
+	Oct = []
+	Nov = []
+	Dec = []
+
+	Months = [Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec]
+	MonthsV = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+
+	i = 0
+	Y = allData[0][0]
+	Temp = []
+
+	while i < len(Months):
+		for aRow in allData:
+			if aRow[0]==Y:
+				if aRow[2]==MonthsV[i]:
+					if np.isnan(aRow[3]) != True:
+						# Verify it is not nan, append rain to winter rain
+						Temp.append(aRow[3])	
+					if np.isnan(aRow[4]) != True:
+						# This will include SWE to winter precip total
+						# Estimate a 1/10 ratio of snow water equivalent
+						Temp.append(aRow[4]/10)
+			if aRow[0]!=Y:
+				Y = Y+1
+				Months[i].append(Temp)
+				Temp = []
+				if aRow[2]==MonthsV[i]:
+					if np.isnan(aRow[3]) != True:
+						# Verify it is not nan, append rain to winter rain
+						Temp.append(aRow[3])	
+					if np.isnan(aRow[4]) != True:
+						# This will include SWE to winter precip total
+						# Estimate a 1/10 ratio of snow water equivalent
+						Temp.append(aRow[4]/10)
+			if aRow==allData[0]:
+				Y = allData[0][0]
+				Months[i].append(Temp)
+				Temp = []
+		i = i+1
+
+	print len(Jan)
+	print len(Dec)
+
+	sys.exit()
+
+
+	
+
+
+
+
+	SpringSum = []
+
+	for aRow in allData:
+		if aRow[2] == 3 or aRow[2] == 4 or aRow[2] == 5:
+			if np.isnan(aRow[3]) != True:
+				# Verify it is not nan, append rain to winter rain
+				SpringSum.append(aRow[3])
+			if np.isnan(aRow[4]) != True:
+				# This will include SWE to winter precip total
+				# Estimate a 1/10 ratio of snow water equivalent
+				SpringSum.append(aRow[4]/10)
+
+	SummerSum = []
+
+	for aRow in allData:
+		if aRow[2] == 6 or aRow[2] == 7 or aRow[2] == 8:
+			if np.isnan(aRow[3]) != True:
+				# Verify it is not nan, append rain to winter rain
+				SummerSum.append(aRow[3])
+			if np.isnan(aRow[4]) != True:
+				# This will include SWE to winter precip total
+				# Estimate a 1/10 ratio of snow water equivalent
+				SummerSum.append(aRow[4]/10)
+
+	FallSum = []
+
+	for aRow in allData:
+		if aRow[2] == 9 or aRow[2] == 10 or aRow[2] == 11:
+			if np.isnan(aRow[3]) != True:
+				# Verify it is not nan, append rain to winter rain
+				FallSum.append(aRow[3])
+			if np.isnan(aRow[4]) != True:
+				# This will include SWE to winter precip total
+				# Estimate a 1/10 ratio of snow water equivalent
+				FallSum.append(aRow[4]/10)
+
+
+
 	###################################### Running mean SI
 	# Format: RAWDATA [Year, DD, MM, Precip, Snow, Tmax, Tmin, TOBS, Hydro Year]
 	# Format: STANDARDSNOW [Annual Snowfall, Snow Days, Daily Ave, Start D, End D, Season Length]
@@ -509,7 +613,7 @@ def Rainfall(StationName, RawData, SE, f,
 	# ax.text(0.95, 0.01, 'Trendline Slope: %f P Value: %f RSqrd Value: %f' % 
 	#     (slope, p_value, r_value), verticalalignment='bottom', 
 	#     horizontalalignment='right', transform=ax.transAxes, fontsize=8)
-	plt.show()
+	# plt.show()
 	plt.close()
 
 	###################################### Running mean EE
@@ -624,15 +728,6 @@ def Rainfall(StationName, RawData, SE, f,
 
 	# Format: RAWDATA [Year, DD, MM, Precip, Snow, Tmax, Tmin, TOBS, Hydro Year]
 	# Format: STANDARDSNOW [Annual Snowfall, Snow Days, Daily Ave, Start D, End D, Season Length]
-
-
-
-
-
-
-
-
-
 
 
 	################################### Annual probabilty 

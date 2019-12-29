@@ -50,11 +50,11 @@ def Split_Data(Data, StationName, f, FirstYear, RawData,
         aRow[2] = int(aRow[2])
 
     # Keep base rcord data without year HY or Clip trim.
-    # Still starts at study year from query.
     for aRow in allData:
         if aRow[0]>=FirstYear:
             if aRow[0]<=FinalYear:
                 BaseData.append(aRow)
+
     #***************************************TRIM YEARS*********************
   
     #*****Format [Year, DD, MM, Precip, Snow, Tmax, Tmin, TOBS]

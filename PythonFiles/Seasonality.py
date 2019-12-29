@@ -3,6 +3,16 @@ from BasicImports import *
 def Seasonality(StationName, RawData, SE, f, 
       StationExports, Dayx, MonthX, YearLabel, WinterStats, WSY,
       MissingSnowData, BaseData, EE, StandardSnow):
+
+	dir = 'Output/'+StationName+'/Seasonality'
+	if not os.path.exists(dir):
+		os.makedirs('Output/'+StationName+'/Seasonality')
+	else:
+		shutil.rmtree(dir)
+		os.makedirs(dir)
+
+	Output = 'Output/'+StationName+'/Seasonality/'
+
 	# Format: RAWDATA [Year, DD, MM, Precip, Snow, Tmax, Tmin, TOBS, Hydro Year]
 	# Format: STANDARDSNOW [Annual Snowfall, Snow Days, Daily Ave, Start D, End D, Season Length]
 	# 3 is precip
@@ -17,12 +27,21 @@ def Seasonality(StationName, RawData, SE, f,
 	# see the master file to reference what month the 'year' will start. For example,
 	# if using a hydro year, the first month will be 10 for October.
 
-	# Filter the data, remove temp information. Leave: [Year, DD, MM, Precip, Snow, Hydro Year]
+	# Filter the data, remove temp information. 
+	# Leave: [Year, DD, MM, Precip, Snow, Index]
+	# We use BaseData to allow for full analysis of seasons here.
+	# RawData is clipped special for snowfall/winter analysis.
 	SelectData = []
-	for aItem in RawData:
+	SY = BaseData[0][0]
+	i = 1
+	for aItem in BaseData:
 		T1 = aItem[0:5]
-		T1.append(aItem[-1])
+		if T1[0]!= SY:
+			SY = T1[0]
+			i = i+1
+		T1.append(i)
 		SelectData.append(T1)
+
 
 	# Calculate monthly totals of liquid precip
 	# Years is the year data for the month records
@@ -146,13 +165,7 @@ def Seasonality(StationName, RawData, SE, f,
 	MonthlyRainfall.append(tempRain)
 	AnnualSum.append(AnnCount)
 	AnnualDate.append(YearTemp)
-	# print len(Months)
-	# print len(Years)
-	# print len(MonthlyRainfall)
-	# print len(AnnualDate)
-	# print len(AnnualSum)
-	# sys.exit()
-	# print Months
+
 	############################################# Seasonality Index (Annual)
 	i = 0
 	im = 0
@@ -201,6 +214,9 @@ def Seasonality(StationName, RawData, SE, f,
 	for aItem in SeasonalityIndex:
 		SId.append(aItem)
 
+	print len(SId)
+	sys.exit()
+
 	# Plot our seasonality index
 
 	SeasonalityIndex = np.array(SeasonalityIndex)
@@ -221,44 +237,13 @@ def Seasonality(StationName, RawData, SE, f,
 	ax.text(0.95, 0.01, 'Trendline Slope: %f P Value: %f RSqrd Value: %f' % 
 	    (slope, p_value, r_value), verticalalignment='bottom', 
 	    horizontalalignment='right', transform=ax.transAxes, fontsize=8)
-	# plt.savefig('%s/Annual_Average_Daily_STD.%s' % (dir, f))
+	plt.savefig('%sSeasonality_Index.%s' % (Output, f))
 	# StationExports.append(slope)
 	# StationExports.append(p_value)
 	# StationExports.append(r_value)
 
 	# plt.show()
 	plt.close()
-	# sys.exit()
-
-	################################ Compare EE data with SI
-	# Format: RAWDATA [Year, DD, MM, Precip, Snow, Tmax, Tmin, TOBS, Hydro Year]
-	# Format: STANDARDSNOW [Annual Snowfall, Snow Days, Daily Ave, Start D, End D, Season Length]
-	# EESI = []
-	# i = 0
-	# for aItem in EE:
-	# 	aItem.append(SId[i])
-	# 	EESI.append(aItem)
-	# 	i = i+1
-
-	# # print EESI
-	# # Python code to sort the lists using the second element of sublists 
-	# # Inplace way to sort, use of third variable 
-	# def Sort(sub_li): 
-	#     l = len(sub_li) 
-	#     for i in range(0, l): 
-	#         for j in range(0, l-i-1): 
-	#             if (sub_li[j][1] > sub_li[j + 1][1]): 
-	#                 tempo = sub_li[j] 
-	#                 sub_li[j]= sub_li[j + 1] 
-	#                 sub_li[j + 1]= tempo 
-	#     return sub_li 
-	  
-	# # Driver Code 
-	# print(Sort(EESI)) 
-
-
-	# sys.exit()
-
 
 	############################################# Seasonality Index (Entire period)
 
@@ -413,7 +398,8 @@ def Seasonality(StationName, RawData, SE, f,
 	plt.title('Seasonal Precipitation Over Study Period (%i Years)' % (TotalYears), fontweight='bold')
 	plt.text(.5, 1.12, 'Station: %s' % (StationName), verticalalignment='center', 
 	    horizontalalignment='center', transform=ax.transAxes, fontsize=12,
-	    fontweight=None, color='black')	
+	    fontweight=None, color='black')
+	plt.savefig('%sSeasonal_Precip.%s' % (Output, f))
 	# plt.show()
 	plt.close()
 	# sys.exit()
@@ -421,6 +407,7 @@ def Seasonality(StationName, RawData, SE, f,
 	##################################### Plot seasonal precip by year
 
 	# Monthly values
+	# Format: [Year, DD, MM, Precip, Snow, Hydro Year]
 
 	# January not appending correctly 
 
@@ -439,15 +426,16 @@ def Seasonality(StationName, RawData, SE, f,
 
 	Months = [Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec]
 	MonthsV = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+	MonthStr = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
 	i = 0
 	Y = allData[0][0]
-	Temp = []
 
 	while i < len(Months):
+		Temp = []
 		for aRow in allData:
-			if aRow[0]==Y:
-				if aRow[2]==MonthsV[i]:
+			if int(aRow[0])==int(Y):
+				if int(aRow[2])==MonthsV[i]:
 					if np.isnan(aRow[3]) != True:
 						# Verify it is not nan, append rain to winter rain
 						Temp.append(aRow[3])	
@@ -455,11 +443,13 @@ def Seasonality(StationName, RawData, SE, f,
 						# This will include SWE to winter precip total
 						# Estimate a 1/10 ratio of snow water equivalent
 						Temp.append(aRow[4]/10)
-			if aRow[0]!=Y:
+
+			if int(aRow[0])!= int(Y):
 				Y = Y+1
 				Months[i].append(Temp)
 				Temp = []
-				if aRow[2]==MonthsV[i]:
+
+				if int(aRow[2])==MonthsV[i]:
 					if np.isnan(aRow[3]) != True:
 						# Verify it is not nan, append rain to winter rain
 						Temp.append(aRow[3])	
@@ -467,59 +457,152 @@ def Seasonality(StationName, RawData, SE, f,
 						# This will include SWE to winter precip total
 						# Estimate a 1/10 ratio of snow water equivalent
 						Temp.append(aRow[4]/10)
-			if aRow==allData[0]:
+
+			if aRow==allData[-1]:
 				Y = allData[0][0]
 				Months[i].append(Temp)
-				Temp = []
 		i = i+1
 
-	print len(Jan)
-	print len(Dec)
+	MTP = []
+	Temp = []
+	for aList in Months:
+		for aMList in aList:
+			Temp.append(sum(aMList))
+		MTP.append(Temp)
+		Temp = []
 
-	sys.exit()
+	# Loop graph the data for monthly precipitaion totals of time
+	Years = []
+	for x in xrange(int(allData[0][0]), int(allData[-1][0])+1):
+		Years.append(x)
+
+	i = 0
+	while i<len(MTP):
+		MonthlyPrecip = np.array(MTP[i])
+		xi = np.array(Years)
+		mask = ~np.isnan(xi) & ~np.isnan(MonthlyPrecip)
+		fig = plt.figure()
+		ax = fig.add_subplot(111)
+		ax.grid(True)
+		ax.text(.5, 1.1, 'Station: %s' % (StationName), verticalalignment='center', 
+		    horizontalalignment='center', transform=ax.transAxes, fontsize=12,
+		    fontweight=None, color='black')
+		fig.subplots_adjust(top=0.85)
+		ax.set_xlabel('Year')
+		ax.set_ylabel('Monthly Precipitation (mm)')
+		ax.set_title('%s Total Precipitation by Year' % (MonthStr[i]), fontweight='bold')
+		plt.plot(xi,MonthlyPrecip,  '-')
+		slope, intercept, r_value, p_value, std_err = stats.linregress(xi[mask], MonthlyPrecip[mask])
+		plt.plot(xi,intercept+slope*xi, 'r')
+		ax.text(0.95, 0.01, 'Trendline Slope: %f P Value: %f RSqrd Value: %f' % 
+		    (slope, p_value, r_value), verticalalignment='bottom', 
+		    horizontalalignment='right', transform=ax.transAxes, fontsize=8)
+		# plt.show()
+		plt.savefig('%sMonthly_Precipitation_%s.%s' % (Output, MonthStr[i], f))
+		plt.close()
+		i = i+1
 
 
-	
+	############################### Plot seasonal precipitation over time
 
+	# Due to months for winter season, this section is plotted seprately.
+	# It requires the months of December, January, and Feburary.
 
+	WinterSums = []
+	i = 0
+	while i < int(allData[-1][-1])-1:
+		# Using december from the "year" before. 
+		DecMod = i-1
+		if DecMod>=0:
+			WinterSum = MTP[-1][DecMod]+MTP[0][i]+MTP[1][i]
+		if DecMod<0:
+			WinterSum = np.nan
+		WinterSums.append(WinterSum)
+		i = i+1
 
+	Years = []
+	for x in xrange(int(allData[0][0]), int(allData[-1][0])):
+		Years.append(x)
 
-	SpringSum = []
+	Precip = np.array(WinterSums)
+	xi = np.array(Years)
+	mask = ~np.isnan(xi) & ~np.isnan(Precip)
+	fig = plt.figure()
+	ax = fig.add_subplot(111)
+	ax.grid(True)
+	ax.text(.5, 1.1, 'Station: %s' % (StationName), verticalalignment='center', 
+	    horizontalalignment='center', transform=ax.transAxes, fontsize=12,
+	    fontweight=None, color='black')
+	fig.subplots_adjust(top=0.85)
+	ax.set_xlabel('Year')
+	ax.set_ylabel('Seasonal Precipitation Total (mm)')
+	ax.set_title('Total Precipitation by Season (Winter_Sums)', fontweight='bold')
+	plt.plot(xi,Precip,  '-')
+	slope, intercept, r_value, p_value, std_err = stats.linregress(xi[mask], Precip[mask])
+	plt.plot(xi,intercept+slope*xi, 'r')
+	ax.text(0.95, 0.01, 'Trendline Slope: %f P Value: %f RSqrd Value: %f' % 
+	    (slope, p_value, r_value), verticalalignment='bottom', 
+	    horizontalalignment='right', transform=ax.transAxes, fontsize=8)
+	plt.savefig('%sWinter_Sums_Precipitation.%s' % (Output, f))
+	# plt.show()
+	plt.close()
 
-	for aRow in allData:
-		if aRow[2] == 3 or aRow[2] == 4 or aRow[2] == 5:
-			if np.isnan(aRow[3]) != True:
-				# Verify it is not nan, append rain to winter rain
-				SpringSum.append(aRow[3])
-			if np.isnan(aRow[4]) != True:
-				# This will include SWE to winter precip total
-				# Estimate a 1/10 ratio of snow water equivalent
-				SpringSum.append(aRow[4]/10)
+	# Spring Summer and Fall graphing
 
-	SummerSum = []
+	SpringSums = []
+	i = 0
+	while i < int(allData[-1][-1]):
+		SpringSum = MTP[2][i]+MTP[3][i]+MTP[4][i]
+		SpringSums.append(SpringSum)
+		i = i+1
 
-	for aRow in allData:
-		if aRow[2] == 6 or aRow[2] == 7 or aRow[2] == 8:
-			if np.isnan(aRow[3]) != True:
-				# Verify it is not nan, append rain to winter rain
-				SummerSum.append(aRow[3])
-			if np.isnan(aRow[4]) != True:
-				# This will include SWE to winter precip total
-				# Estimate a 1/10 ratio of snow water equivalent
-				SummerSum.append(aRow[4]/10)
+	SummerSums = []
+	i = 0
+	while i < int(allData[-1][-1]):
+		SummerSum = MTP[5][i]+MTP[6][i]+MTP[7][i]
+		SummerSums.append(SummerSum)
+		i = i+1
 
-	FallSum = []
+	FallSums = []
+	i = 0
+	while i < int(allData[-1][-1]):
+		FallSum = MTP[8][i]+MTP[9][i]+MTP[10][i]
+		FallSums.append(FallSum)
+		i = i+1
 
-	for aRow in allData:
-		if aRow[2] == 9 or aRow[2] == 10 or aRow[2] == 11:
-			if np.isnan(aRow[3]) != True:
-				# Verify it is not nan, append rain to winter rain
-				FallSum.append(aRow[3])
-			if np.isnan(aRow[4]) != True:
-				# This will include SWE to winter precip total
-				# Estimate a 1/10 ratio of snow water equivalent
-				FallSum.append(aRow[4]/10)
+	# Central seasons (the ones that don't pass into new year)
+	CS = [SpringSums, SummerSums, FallSums]
+	CSstr = ['Spring_Sums', 'Summer_Sums', 'Fall_Sums']
 
+	Years = []
+	for x in xrange(int(allData[0][0]), int(allData[-1][0])+1):
+		Years.append(x)
+
+	i = 0
+	while i < len(CS):
+		Precip = np.array(CS[i])
+		xi = np.array(Years)
+		mask = ~np.isnan(xi) & ~np.isnan(Precip)
+		fig = plt.figure()
+		ax = fig.add_subplot(111)
+		ax.grid(True)
+		ax.text(.5, 1.1, 'Station: %s' % (StationName), verticalalignment='center', 
+		    horizontalalignment='center', transform=ax.transAxes, fontsize=12,
+		    fontweight=None, color='black')
+		fig.subplots_adjust(top=0.85)
+		ax.set_xlabel('Year')
+		ax.set_ylabel('Seasonl Precipitation Total (mm)')
+		ax.set_title('Total Precipitation by Season (%s)' % (CSstr[i]), fontweight='bold')
+		plt.plot(xi,Precip,  '-')
+		slope, intercept, r_value, p_value, std_err = stats.linregress(xi[mask], Precip[mask])
+		plt.plot(xi,intercept+slope*xi, 'r')
+		ax.text(0.95, 0.01, 'Trendline Slope: %f P Value: %f RSqrd Value: %f' % 
+		    (slope, p_value, r_value), verticalalignment='bottom', 
+		    horizontalalignment='right', transform=ax.transAxes, fontsize=8)
+		plt.savefig('%s%s_Precipitation.%s' % (Output, CSstr[i], f))
+		# plt.show()
+		plt.close()
+		i = i+1
 
 
 	###################################### Running mean SI
@@ -529,13 +612,6 @@ def Seasonality(StationName, RawData, SE, f,
 	# This section will calculate the SI based upon 3 year averages to smooth out the
 	# data. As expressed in pg 182 Terrestrial Hydrometerology W. James Shuttleworth
 	# as a running means SI.
-
-	# print len(Months)
-	# print len(Years)
-	# print len(MonthlyRainfall)
-	# print len(AnnualDate)
-	# print len(AnnualSum)
-	# SId
 
 	# Define the index values (years) and place them into the data records
 	SIdMod = []
@@ -551,7 +627,7 @@ def Seasonality(StationName, RawData, SE, f,
 	# sys.exit()
 
 	# Define the window size for the mean, add 1 to start at 1
-	Window = 2
+	Window = 4
 	# Define a temporary average value
 	WT = 0
 	# Define size of actual window, will be odd number
@@ -587,11 +663,14 @@ def Seasonality(StationName, RawData, SE, f,
 				for Mod in SIdMod:
 					if Mod[-1]==Index:
 						WT = WT+Mod[0]
-			Years.append(aItem[-1])
 			SIave.append(WT/Size)
 			WT = 0
-	# print Years
-	# print SIave
+
+	# Define central years for each average
+	EndMod = int(Size/2)
+	for x in range(BaseData[0][0]+EndMod, BaseData[-1][0]-EndMod):
+		Years.append(x)
+
 	# Plot our average seasonality index
 
 	SeasonalityIndex = np.array(SIave)
@@ -608,126 +687,148 @@ def Seasonality(StationName, RawData, SE, f,
 	ax.set_ylabel('Seasonality Index')
 	ax.set_title('Mean Seasonality Index(%i Year Average)' % (Size), fontweight='bold')
 	plt.plot(xi,SeasonalityIndex,  '-')
-	# slope, intercept, r_value, p_value, std_err = stats.linregress(xi[mask], SeasonalityIndex[mask])
-	# plt.plot(xi,intercept+slope*xi, 'r')
-	# ax.text(0.95, 0.01, 'Trendline Slope: %f P Value: %f RSqrd Value: %f' % 
-	#     (slope, p_value, r_value), verticalalignment='bottom', 
-	#     horizontalalignment='right', transform=ax.transAxes, fontsize=8)
+	slope, intercept, r_value, p_value, std_err = stats.linregress(xi[mask], SeasonalityIndex[mask])
+	plt.plot(xi,intercept+slope*xi, 'r')
+	ax.text(0.95, 0.01, 'Trendline Slope: %f P Value: %f RSqrd Value: %f' % 
+	    (slope, p_value, r_value), verticalalignment='bottom', 
+	    horizontalalignment='right', transform=ax.transAxes, fontsize=8)
+	plt.savefig('%s%s_Year_Mean_SI.%s' % (Output, str(Size), f))
 	# plt.show()
 	plt.close()
 
-	###################################### Running mean EE
 
-	# Define the lenght of the data set
-	Lenght =  len(EE)
-	# print Lenght
-	# print SIdMod
-	# sys.exit()
 
-	# Define the window size for the mean, add 1 to start at 1
-	Window = 4
-	# Define a temporary average value
-	WT = 0
-	# Define size of actual window, will be odd number
-	Size = Window-1
-	# # Define max limit for the analysis, the max index to run to
-	MaxV = (Lenght)-((Size-1)/2)
-	# Define the minimum value to start the analysis
-	MinV = ((Size-1)/2)
-	# Define center value of window
-	ModVars = []
-	for c in range(1, Window):
-		ModVars.append(c)
-	CenterV = np.median(ModVars)
-	# Define years centered at each average
-	Years = []
-	# Define averages for SI
-	EEave = []
-	# print CenterV
-	# # Define a list of indexes for the analysis to go off of
 
-	for aItem in EE:
-		if aItem[0]>MinV and aItem[0]<MaxV:
-			# Write the indexes for all neighboring data for average calc
-			TempI = []
-			for z in range(1, Window):
-				# This value will represent the modifying variables
-				IndexByz = int(z-CenterV)
-				# The index on the list item will modified to write a list of 
-				# index values equal to its neighboring data sets
-				TempI.append(IndexByz+aItem[0])
-			# Filter by each index value selected
-			for Index in TempI:
-				for Mod in EE:
-					if Mod[0]==Index:
-						WT = WT+Mod[-1]
-			Years.append(aItem[0])
-			EEave.append(WT/Size)
-			# if WT!=0:
-			# 	EEave.append(WT/Size)
-			# if WT==0:
-			# 	EEave.append(0)
-			WT = 0
-	# print Years
-	# print SIave
-	# Plot our average seasonality index
 
-	EEmod = np.array(EEave)
-	x = np.array(Years)
-	mask = ~np.isnan(x) & ~np.isnan(EEmod)
-	fig = plt.figure()
-	ax = fig.add_subplot(111)
-	ax.grid(True)
-	ax.text(.5, 1.1, 'Station: %s' % (StationName), verticalalignment='center', 
-	    horizontalalignment='center', transform=ax.transAxes, fontsize=12,
-	    fontweight=None, color='black')
-	fig.subplots_adjust(top=0.85)
-	ax.set_xlabel(YearLabel)
-	ax.set_ylabel('Extreme Snowfall Events')
-	ax.set_title('Mean Extreme Snowfall Events (%i Year Average)' % (Size), fontweight='bold')
-	plt.plot(x,EEmod,  'ro')
-	# slope, intercept, r_value, p_value, std_err = stats.linregress(x[mask], SeasonalityIndex[mask])
-	# plt.plot(x,intercept+slope*x, 'r')
-	# ax.text(0.95, 0.01, 'Trendline Slope: %f P Value: %f RSqrd Value: %f' % 
-	#     (slope, p_value, r_value), verticalalignment='bottom', 
-	#     horizontalalignment='right', transform=ax.transAxes, fontsize=8)
-	# plt.show()
-	plt.close()
 
-	############################### Plot SI with EE
 
-	EEmod = np.array(EEave)
-	x = np.array(Years)
-	mask = ~np.isnan(x) & ~np.isnan(EEmod)
-	fig, ax1 = plt.subplots()
-	# ax1 = fig.add_subplot(111)
-	ax1.grid(True)
-	ax1.text(.5, 1.15, 'Station: %s' % (StationName), verticalalignment='center', 
-	    horizontalalignment='center', transform=ax.transAxes, fontsize=12,
-	    fontweight=None, color='black')
+
+
+
+
+
+
+
+
+
+
+
+
+	# Belongs in sep module
+
+	# ###################################### Running mean EE
+
+	# # Define the lenght of the data set
+	# Lenght =  len(EE)
+	# # print Lenght
+	# # print SIdMod
+	# # sys.exit()
+
+	# # Define the window size for the mean, add 1 to start at 1
+	# Window = 4
+	# # Define a temporary average value
+	# WT = 0
+	# # Define size of actual window, will be odd number
+	# Size = Window-1
+	# # # Define max limit for the analysis, the max index to run to
+	# MaxV = (Lenght)-((Size-1)/2)
+	# # Define the minimum value to start the analysis
+	# MinV = ((Size-1)/2)
+	# # Define center value of window
+	# ModVars = []
+	# for c in range(1, Window):
+	# 	ModVars.append(c)
+	# CenterV = np.median(ModVars)
+	# # Define years centered at each average
+	# Years = []
+	# # Define averages for SI
+	# EEave = []
+	# # print CenterV
+	# # # Define a list of indexes for the analysis to go off of
+
+	# for aItem in EE:
+	# 	if aItem[0]>MinV and aItem[0]<MaxV:
+	# 		# Write the indexes for all neighboring data for average calc
+	# 		TempI = []
+	# 		for z in range(1, Window):
+	# 			# This value will represent the modifying variables
+	# 			IndexByz = int(z-CenterV)
+	# 			# The index on the list item will modified to write a list of 
+	# 			# index values equal to its neighboring data sets
+	# 			TempI.append(IndexByz+aItem[0])
+	# 		# Filter by each index value selected
+	# 		for Index in TempI:
+	# 			for Mod in EE:
+	# 				if Mod[0]==Index:
+	# 					WT = WT+Mod[-1]
+	# 		Years.append(aItem[0])
+	# 		EEave.append(WT/Size)
+	# 		# if WT!=0:
+	# 		# 	EEave.append(WT/Size)
+	# 		# if WT==0:
+	# 		# 	EEave.append(0)
+	# 		WT = 0
+
+	# # Plot our average seasonality index
+
+	# EEmod = np.array(EEave)
+	# x = np.array(Years)
+	# mask = ~np.isnan(x) & ~np.isnan(EEmod)
+	# fig = plt.figure()
+	# ax = fig.add_subplot(111)
+	# ax.grid(True)
+	# ax.text(.5, 1.1, 'Station: %s' % (StationName), verticalalignment='center', 
+	#     horizontalalignment='center', transform=ax.transAxes, fontsize=12,
+	#     fontweight=None, color='black')
 	# fig.subplots_adjust(top=0.85)
-	ax1.set_xlabel(YearLabel)
-	ax1.set_ylabel('Extreme Snowfall Events (Averaged)')
-	ax1.set_title('SE Events and SI Values (%i Year Average)' % (Size), fontweight='bold')
-	ax1.plot(x,EEmod,  linestyle= '-', color = 'blue')
-	ax1.tick_params(axis='y', labelcolor='blue')
+	# ax.set_xlabel(YearLabel)
+	# ax.set_ylabel('Extreme Snowfall Events')
+	# ax.set_title('Mean Extreme Snowfall Events (%i Year Average)' % (Size), fontweight='bold')
+	# plt.plot(x,EEmod,  'ro')
+	# # slope, intercept, r_value, p_value, std_err = stats.linregress(x[mask], SeasonalityIndex[mask])
+	# # plt.plot(x,intercept+slope*x, 'r')
+	# # ax.text(0.95, 0.01, 'Trendline Slope: %f P Value: %f RSqrd Value: %f' % 
+	# #     (slope, p_value, r_value), verticalalignment='bottom', 
+	# #     horizontalalignment='right', transform=ax.transAxes, fontsize=8)
 
-	ax2 = ax1.twinx()
-	ax2.set_ylabel('Seasonality Index (Averaged)')
-	ax2.tick_params(axis='y', labelcolor='black')
+	# # plt.show()
+	# plt.close()
 
-	ax2.plot(xi,SeasonalityIndex,  linestyle= '-', color = 'black')
+	# ############################### Plot SI with EE
 
-	# slope, intercept, r_value, p_value, std_err = stats.linregress(x[mask], SeasonalityIndex[mask])
-	# plt.plot(x,intercept+slope*x, 'r')
-	# ax.text(0.95, 0.01, 'Trendline Slope: %f P Value: %f RSqrd Value: %f' % 
-	#     (slope, p_value, r_value), verticalalignment='bottom', 
-	#     horizontalalignment='right', transform=ax.transAxes, fontsize=8)
+	# EEmod = np.array(EEave)
+	# x = np.array(Years)
+	# mask = ~np.isnan(x) & ~np.isnan(EEmod)
+	# fig, ax1 = plt.subplots()
+	# # ax1 = fig.add_subplot(111)
+	# ax1.grid(True)
+	# ax1.text(.5, 1.15, 'Station: %s' % (StationName), verticalalignment='center', 
+	#     horizontalalignment='center', transform=ax.transAxes, fontsize=12,
+	#     fontweight=None, color='black')
+	# # fig.subplots_adjust(top=0.85)
+	# ax1.set_xlabel(YearLabel)
+	# ax1.set_ylabel('Extreme Snowfall Events (Averaged)')
+	# ax1.set_title('SE Events and SI Values (%i Year Average)' % (Size), fontweight='bold')
+	# ax1.plot(x,EEmod,  linestyle= '-', color = 'blue')
+	# ax1.tick_params(axis='y', labelcolor='blue')
+
+	# ax2 = ax1.twinx()
+	# ax2.set_ylabel('Seasonality Index (Averaged)')
+	# ax2.tick_params(axis='y', labelcolor='black')
+
+	# ax2.plot(xi,SeasonalityIndex,  linestyle= '-', color = 'black')
+
+	# # slope, intercept, r_value, p_value, std_err = stats.linregress(x[mask], SeasonalityIndex[mask])
+	# # plt.plot(x,intercept+slope*x, 'r')
+	# # ax.text(0.95, 0.01, 'Trendline Slope: %f P Value: %f RSqrd Value: %f' % 
+	# #     (slope, p_value, r_value), verticalalignment='bottom', 
+	# #     horizontalalignment='right', transform=ax.transAxes, fontsize=8)
+	# plt.savefig('%s%s_Year_Mean_SI_SnowfallEE.%s' % (Output, str(Size), f))
 	# plt.show()
-	plt.close()
+	# # plt.close()
 
-	# Format: RAWDATA [Year, DD, MM, Precip, Snow, Tmax, Tmin, TOBS, Hydro Year]
-	# Format: STANDARDSNOW [Annual Snowfall, Snow Days, Daily Ave, Start D, End D, Season Length]
+	# # Format: RAWDATA [Year, DD, MM, Precip, Snow, Tmax, Tmin, TOBS, Hydro Year]
+	# # Format: STANDARDSNOW [Annual Snowfall, Snow Days, Daily Ave, Start D, End D, Season Length]
 
 
 	################################### Annual probabilty 

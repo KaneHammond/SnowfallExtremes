@@ -60,7 +60,14 @@ from scipy import stats
 from scipy.stats import norm
 from scipy.stats import uniform
 import collections
-import tqdm
+
+try:
+    import tqdm
+except:
+    import pip
+    pip.main(['install','tqdm'])
+    import tqdm
+
 import time
 
 ### ************************************

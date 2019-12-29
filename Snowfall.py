@@ -87,7 +87,7 @@ f = 'png'
 FirstYear = 1969
 FinalYear = 2018
 YearLabel = 'Year'
-MonthX = 12
+MonthX = 7
 
 ############################## Mute for autorun
 
@@ -251,7 +251,7 @@ for i in tqdm.tqdm(range(ProgBarLimit)):
     Data = pd.read_csv((Import_Path+'/'+Stations+'.csv'), header=0)
   
   # Format to meet current program design ([Date, PRCP, SNOW, TMAX, TMIN, TOBS])
-  Data = Data.drop(columns=['ID', 'YEAR', 'MONTH', 'DAY'])
+  Data = Data.drop(['ID', 'YEAR', 'MONTH', 'DAY'], axis=1)
   try:
     Data = Data[['MM/DD/YYYY', 'PRCP', 'SNOW', 'TMAX', 'TMIN', 'TOBS']]
   except:
@@ -365,12 +365,17 @@ for i in tqdm.tqdm(range(ProgBarLimit)):
 
   # Drop basic columns. Pandas merge format changed the format of 
   # named columns. Renamed below back to basic format.
-  DataFull = DataFull.drop(columns=['PRCP', 'SNOW', 'TMAX', 'TMIN', 'TOBS'])
+  DataFull = DataFull.drop(['PRCP', 'SNOW', 'TMAX', 'TMIN', 'TOBS'], axis=1)
   DataFull['MM/DD/YYYY'] = DataFull['MM/DD/YYYY'].astype(str)
   DataFull = DataFull.rename(columns={'PRCP_y': 'PRCP', 'SNOW_y': 'SNOW', 'TMAX_y': 'TMAX', 'TMIN_y': 'TMIN', 'TOBS_y': 'TOBS'})
   
   # Merge the dates in correct format to main dataframe
-  DataFull = pd.merge(DataFull, df4, on='NewDate', how='outer')
+
+  # DataFull = pd.merge(DataFull, df4, on='NewDate', how='outer')
+  # DataFull = DataFull.merge(df4, on = 'NewDate', how='outer')
+  DataFull = DataFull.merge(df4, how='outer', left_on = 'NewDate', right_on = 'NewDate')
+
+
   DataFull = DataFull.drop(columns=['NewDate', 'MM/DD/YYYY'])
   DataFull = DataFull[['FixedDate', 'PRCP', 'SNOW', 'TMAX', 'TMIN', 'TOBS']]
   # Convert to meet prior format standard

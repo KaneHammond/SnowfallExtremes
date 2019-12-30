@@ -214,11 +214,7 @@ def Seasonality(StationName, RawData, SE, f,
 	for aItem in SeasonalityIndex:
 		SId.append(aItem)
 
-	print len(SId)
-	sys.exit()
-
 	# Plot our seasonality index
-
 	SeasonalityIndex = np.array(SeasonalityIndex)
 	mask = ~np.isnan(x) & ~np.isnan(SeasonalityIndex)
 	fig = plt.figure()
@@ -244,7 +240,6 @@ def Seasonality(StationName, RawData, SE, f,
 
 	# plt.show()
 	plt.close()
-
 	############################################# Seasonality Index (Entire period)
 
 	# This requires data from the initial annual SI assessment. Therefore, it must 
@@ -404,6 +399,18 @@ def Seasonality(StationName, RawData, SE, f,
 	plt.close()
 	# sys.exit()
 
+	# Extract seasonal precip percentages
+	Total = WinterSum+FallSum+SpringSum+SummerSum
+	SumPer = float(SummerSum/Total)*100
+	SprPer = float(SpringSum/Total)*100
+	FallPer = float(FallSum/Total)*100
+	WinPer = float(WinterSum/Total)*100
+
+	StationExports.append(SprPer)
+	StationExports.append(SumPer)
+	StationExports.append(FallPer)
+	StationExports.append(WinPer)
+
 	##################################### Plot seasonal precip by year
 
 	# Monthly values
@@ -546,6 +553,9 @@ def Seasonality(StationName, RawData, SE, f,
 	plt.savefig('%sWinter_Sums_Precipitation.%s' % (Output, f))
 	# plt.show()
 	plt.close()
+	StationExports.append(slope)
+	StationExports.append(p_value)
+	StationExports.append(r_value)
 
 	# Spring Summer and Fall graphing
 
@@ -602,6 +612,9 @@ def Seasonality(StationName, RawData, SE, f,
 		plt.savefig('%s%s_Precipitation.%s' % (Output, CSstr[i], f))
 		# plt.show()
 		plt.close()
+		StationExports.append(slope)
+		StationExports.append(p_value)
+		StationExports.append(r_value)
 		i = i+1
 
 
@@ -695,6 +708,9 @@ def Seasonality(StationName, RawData, SE, f,
 	plt.savefig('%s%s_Year_Mean_SI.%s' % (Output, str(Size), f))
 	# plt.show()
 	plt.close()
+	StationExports.append(slope)
+	StationExports.append(p_value)
+	StationExports.append(r_value)
 
 
 
@@ -904,6 +920,4 @@ def Seasonality(StationName, RawData, SE, f,
 	# y = np.array(y)
 	# print np.percentile(y, 99)
 
-
-	sys.exit()
 

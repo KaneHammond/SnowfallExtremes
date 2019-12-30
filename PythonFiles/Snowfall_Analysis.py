@@ -17,6 +17,9 @@ def SnowFallAnalysis(StationName, RawData, SE, f,
     #*******************************************************
     #Format [Year, DD, MM, Precip, Snow, Tmax, Tmin, TOBS, Hydro Year]
     allData = copy.deepcopy(RawData)
+    for aRow in allData:
+        print aRow
+        sys.exit()
     #*********************************COUNT SNOWDAYS AND TOTAL****************
     # These values can be used to compare the sum of parsed data
     # this will ensure no records were lost.

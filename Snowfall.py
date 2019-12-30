@@ -25,8 +25,6 @@ dir = 'Output'
 if not os.path.exists(dir):
     os.makedirs(dir)
 
-
-
 # Return csv of stations from query.
 if query>3 or query < 0:
   print ('Choice Not Within Range')
@@ -84,7 +82,7 @@ if query == 2:
 # # Autorun
 SE = 0.95
 f = 'png'
-FirstYear = 1969
+FirstYear = 1965
 FinalYear = 2018
 YearLabel = 'Year'
 MonthX = 7
@@ -176,7 +174,13 @@ Header = ['Station', 'State', 'Country', 'Elevation',
   'SpringAve Slp', 'SpringAve Pval', 'SpringAve Rval', 
   'SpringSTD Slp', 'SpringSDT Pval', 'SpringSTD Rval',
   'AnnualAve Slp', 'AnnualAve Pval', 'AnnualAve Rval', 
-  'AnnualSTD Slp', 'AnnualSDT Pval', 'AnnualSTD Rval']
+  'AnnualSTD Slp', 'AnnualSDT Pval', 'AnnualSTD Rval',
+  'SprPrecip', 'SumPrecip', 'FallPrecip', 'WinPrecip',
+  'WinSsn Slp', 'WinSsn Pval', 'WinSsn Rval', 'SprSsn Slp',
+  'SprSsn Pval', 'SprSsn Rval', 'SumSsn Slp', 'SumSsn Pval',
+  'SumSsn Rval', 'FallSsn Slp', 'FallSsn Pval', 'FallSsn Rval',
+  'AveSI Slp', 'AveSI Pval', 'AveSI Rval', 'AnnualRain Slp', 
+  'AnnualRain Pval', 'AnnualRain Rval']
 
 
 
@@ -250,16 +254,14 @@ for i in tqdm.tqdm(range(ProgBarLimit)):
   if Path == 2:
     Data = pd.read_csv((Import_Path+'/'+Stations+'.csv'), header=0)
   
-  # Format to meet current program design ([Date, PRCP, SNOW, TMAX, TMIN, TOBS])
+  # Format to meet current program design ([Date, PRCP, SNOW, TMAX, TMIN])
   Data = Data.drop(['ID', 'YEAR', 'MONTH', 'DAY'], axis=1)
   try:
-    Data = Data[['MM/DD/YYYY', 'PRCP', 'SNOW', 'TMAX', 'TMIN', 'TOBS']]
+    Data = Data[['MM/DD/YYYY', 'PRCP', 'SNOW', 'TMAX', 'TMIN']]
   except:
-    if 'TOBS' not in Data:
-      Data['TOBS'] = np.nan
     if 'PRCP' not in Data:
       Data['PRCP'] = np.nan
-    Data = Data[['MM/DD/YYYY', 'PRCP', 'SNOW', 'TMAX', 'TMIN', 'TOBS']]
+    Data = Data[['MM/DD/YYYY', 'PRCP', 'SNOW', 'TMAX', 'TMIN']]
   # Fill in missing dates with nan records to close data gaps.
 
   # Define range of dates in dataset
@@ -288,6 +290,8 @@ for i in tqdm.tqdm(range(ProgBarLimit)):
   # years in the data to later fill with null values. Datetime format
   # is required to compare the sets.
 
+  # WORK Dates seem to be doubled and have float(nan) for dates 
+
   # Python code the get difference of two lists 
   # Not using set()
   list2 = idxForm
@@ -306,7 +310,6 @@ for i in tqdm.tqdm(range(ProgBarLimit)):
   df['SNOW'] = np.nan
   df['TMAX'] = np.nan
   df['TMIN'] = np.nan
-  df['TOBS'] = np.nan
 
   # New df of full dates
   df2 = pd.DataFrame({'Date' : idxForm})
@@ -340,11 +343,11 @@ for i in tqdm.tqdm(range(ProgBarLimit)):
   # (Formatted as indexForm)
 
   # Make list of index
-  i = 0
+  m = 0
   IFix = []
   for aItem in list1:
     IFix.append(i)
-    i = i+1
+    m = m+1
 
   # Failed 12/8/19
   # Data['NewDate'] = list1
@@ -365,9 +368,9 @@ for i in tqdm.tqdm(range(ProgBarLimit)):
 
   # Drop basic columns. Pandas merge format changed the format of 
   # named columns. Renamed below back to basic format.
-  DataFull = DataFull.drop(['PRCP', 'SNOW', 'TMAX', 'TMIN', 'TOBS'], axis=1)
+  DataFull = DataFull.drop(['PRCP', 'SNOW', 'TMAX', 'TMIN'], axis=1)
   DataFull['MM/DD/YYYY'] = DataFull['MM/DD/YYYY'].astype(str)
-  DataFull = DataFull.rename(columns={'PRCP_y': 'PRCP', 'SNOW_y': 'SNOW', 'TMAX_y': 'TMAX', 'TMIN_y': 'TMIN', 'TOBS_y': 'TOBS'})
+  DataFull = DataFull.rename(columns={'PRCP_y': 'PRCP', 'SNOW_y': 'SNOW', 'TMAX_y': 'TMAX', 'TMIN_y': 'TMIN'})
   
   # Merge the dates in correct format to main dataframe
 
@@ -377,14 +380,10 @@ for i in tqdm.tqdm(range(ProgBarLimit)):
 
 
   DataFull = DataFull.drop(columns=['NewDate', 'MM/DD/YYYY'])
-  DataFull = DataFull[['FixedDate', 'PRCP', 'SNOW', 'TMAX', 'TMIN', 'TOBS']]
+  DataFull = DataFull[['FixedDate', 'PRCP', 'SNOW', 'TMAX', 'TMIN']]
   # Convert to meet prior format standard
   Data = DataFull
-
-
-
   # Convert data from 10ths to full value
-  Data['TOBS'] = Data['TOBS'].apply(lambda x: x/10)
   Data['TMIN'] = Data['TMIN'].apply(lambda x: x/10)
   Data['TMAX'] = Data['TMAX'].apply(lambda x: x/10)
   Data['PRCP'] = Data['PRCP'].apply(lambda x: x/10)
@@ -399,6 +398,7 @@ for i in tqdm.tqdm(range(ProgBarLimit)):
         WinterStats, WSY, MissingSnowData, YearLabel)
     except:
       pass
+
     try:
       from Snowfall_Analysis import *
       SnowFallAnalysis(StationName, RawData, SE, f, 
@@ -406,19 +406,29 @@ for i in tqdm.tqdm(range(ProgBarLimit)):
         MissingSnowData, BaseData, SingleYearSnowfall, EE, StandardSnow)
     except:
       pass
+
     try:
       from Temperature_Analysis import *
       Temperature(RawData, StationName, f, BaseData, StationExports, OmitYearsT, YearLabel)
-      # FinalData.append(StationExports)
     except:
       pass
-    # try:
-    #   from Rainfall import *
-    #   Rainfall(StationName, RawData, SE, f, 
-    #     StationExports, Dayx, MonthX, YearLabel, WinterStats, WSY,
-    #     MissingSnowData, BaseData)
-    # except:
-    #   pass
+
+    try:
+      from Seasonality import *
+      Seasonality(StationName, RawData, SE, f, 
+        StationExports, Dayx, MonthX, YearLabel, WinterStats, WSY,
+        MissingSnowData, BaseData, EE, StandardSnow)
+    except:
+      pass
+
+    try:
+      from Rainfall import *
+      Rainfall(StationName, RawData, SE, f, 
+        StationExports, Dayx, MonthX, YearLabel, WinterStats, WSY,
+        MissingSnowData, BaseData)
+    except:
+      pass
+
     if len(StationExports)==len(Header):
       FinalData.append(StationExports)
     if len(StationExports)!=len(Header):
@@ -440,17 +450,20 @@ for i in tqdm.tqdm(range(ProgBarLimit)):
       MissingSnowData, BaseData, SingleYearSnowfall, EE, StandardSnow)
 
     # Place before temp section as the data for precip will be removed in temp
+    from Temperature_Analysis import *
+    Temperature(RawData, StationName, f, BaseData, 
+      StationExports, OmitYearsT, YearLabel)
+
     from Seasonality import *
     Seasonality(StationName, RawData, SE, f, 
       StationExports, Dayx, MonthX, YearLabel, WinterStats, WSY,
       MissingSnowData, BaseData, EE, StandardSnow)
 
-
-    from Temperature_Analysis import *
-    Temperature(RawData, StationName, f, BaseData, StationExports, OmitYearsT, YearLabel)
-    FinalData.append(StationExports)
+    from Rainfall import *
+    Rainfall(StationName, RawData, SE, f, 
+      StationExports, Dayx, MonthX, YearLabel, WinterStats, WSY,
+      MissingSnowData, BaseData)
       
-
     if len(StationExports)==len(Header):
       FinalData.append(StationExports)
     if len(StationExports)!=len(Header):

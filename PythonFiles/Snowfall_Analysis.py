@@ -17,9 +17,6 @@ def SnowFallAnalysis(StationName, RawData, SE, f,
     #*******************************************************
     #Format [Year, DD, MM, Precip, Snow, Tmax, Tmin, TOBS, Hydro Year]
     allData = copy.deepcopy(RawData)
-    for aRow in allData:
-        print aRow
-        sys.exit()
     #*********************************COUNT SNOWDAYS AND TOTAL****************
     # These values can be used to compare the sum of parsed data
     # this will ensure no records were lost.
@@ -636,6 +633,249 @@ def SnowFallAnalysis(StationName, RawData, SE, f,
             if aRow[-5] >= ValueMinS:
                 numbevents = numbevents+1
 
+    ########################### 3 Average EE events 
+    # Define the index values (years) and place them into the data records
+    SnowMod = []
+    EED = []
+    for aItem in ExtremeEventsPerYearCDF:
+        EED.append(aItem)
+    i = 0
+    for aItem in EED:
+        SnowMod.append([aItem, i])
+        i = i+1
+
+    # Define the lenght of the data set
+    Lenght =  len(SnowMod)
+    # print Lenght
+    # print SIdMod
+    # sys.exit()
+
+    # Define the window size for the mean, add 1 to start at 1
+    Window = 4
+    # Define a temporary average value
+    WT = 0
+    # Define size of actual window, will be odd number
+    Size = Window-1
+    # # Define max limit for the analysis, the max index to run to
+    MaxV = (Lenght)-((Size-1)/2)
+    # Define the minimum value to start the analysis
+    MinV = ((Size-1)/2)
+    # Define center value of window
+    ModVars = []
+    for c in range(1, Window):
+        ModVars.append(c)
+    CenterV = np.median(ModVars)
+    # Define years centered at each average
+    Years = []
+    # Define averages for Snow EE
+    SnowAve = []
+    # print CenterV
+    # # Define a list of indexes for the analysis to go off of
+
+    for aItem in SnowMod:
+        if aItem[-1]>MinV and aItem[-1]<MaxV:
+            # Write the indexes for all neighboring data for average calc
+            TempI = []
+            for z in range(1, Window):
+                # This value will represent the modifying variables
+                IndexByz = int(z-CenterV)
+                # The index on the list item will modified to write a list of 
+                # index values equal to its neighboring data sets
+                TempI.append(IndexByz+aItem[-1])
+            # Filter by each index value selected
+            for Index in TempI:
+                for Mod in SnowMod:
+                    if Mod[-1]==Index:
+                        WT = WT+Mod[0]
+            SnowAve.append(WT/Size)
+            WT = 0
+
+    EndMod = int(Size/2)
+    for x in range(allData[0][-1]+EndMod, allData[-1][-1]-EndMod):
+        Years.append(x)
+
+    SnowAve = np.array(SnowAve)
+    Years = np.array(Years)
+
+    mask = ~np.isnan(Years) & ~np.isnan(SnowAve)
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    ax.grid(True)
+    ax.text(.5, 1.1, 'Station: %s' % (StationName), verticalalignment='center', 
+        horizontalalignment='center', transform=ax.transAxes, fontsize=12,
+        fontweight=None, color='black')
+    fig.subplots_adjust(top=0.85)
+    ax.set_xlabel(YearLabel)
+    ax.set_ylabel('Extreme Events')
+    ax.set_title('3 Year Average Snowfall Extreme Evetns', fontweight='bold')
+    plt.plot(Years,SnowAve,  '-')
+    slope, intercept, r_value, p_value, std_err = stats.linregress(Years[mask],SnowAve[mask])
+    plt.plot(Years,intercept+slope*Years, 'r')
+    ax.text(0.95, 0.008, 'Trendline Slope: %f P Value: %f RSqrd Value: %f' 
+        % (slope, p_value, r_value), verticalalignment='bottom', 
+        horizontalalignment='right', transform=ax.transAxes, fontsize=8)
+    plt.savefig('%s/3_YearAve_SEE.%s' % (dir, f), dpi=None, 
+    facecolor='w', edgecolor='b', orientation='portrait', papertype=None, 
+    format=None, transparent=False, bbox_inches=None, pad_inches=0.1, 
+    frameon=None)
+    StationExports.append(slope)
+    StationExports.append(p_value)
+    StationExports.append(r_value)
+    plt.close()
+
+    ################################## 5 year ave SEE 
+    # Define the window size for the mean, add 1 to start at 1
+    Window = 6
+    # Define a temporary average value
+    WT = 0
+    # Define size of actual window, will be odd number
+    Size = Window-1
+    # # Define max limit for the analysis, the max index to run to
+    MaxV = (Lenght)-((Size-1)/2)
+    # Define the minimum value to start the analysis
+    MinV = ((Size-1)/2)
+    # Define center value of window
+    ModVars = []
+    for c in range(1, Window):
+        ModVars.append(c)
+    CenterV = np.median(ModVars)
+    # Define years centered at each average
+    Years = []
+    # Define averages for Snow EE
+    SnowAve = []
+    # print CenterV
+    # # Define a list of indexes for the analysis to go off of
+
+    for aItem in SnowMod:
+        if aItem[-1]>MinV and aItem[-1]<MaxV:
+            # Write the indexes for all neighboring data for average calc
+            TempI = []
+            for z in range(1, Window):
+                # This value will represent the modifying variables
+                IndexByz = int(z-CenterV)
+                # The index on the list item will modified to write a list of 
+                # index values equal to its neighboring data sets
+                TempI.append(IndexByz+aItem[-1])
+            # Filter by each index value selected
+            for Index in TempI:
+                for Mod in SnowMod:
+                    if Mod[-1]==Index:
+                        WT = WT+Mod[0]
+            SnowAve.append(WT/Size)
+            WT = 0
+
+    EndMod = int(Size/2)
+    for x in range(allData[0][-1]+EndMod, allData[-1][-1]-EndMod):
+        Years.append(x)
+
+    SnowAve = np.array(SnowAve)
+    Years = np.array(Years)
+
+    mask = ~np.isnan(Years) & ~np.isnan(SnowAve)
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    ax.grid(True)
+    ax.text(.5, 1.1, 'Station: %s' % (StationName), verticalalignment='center', 
+        horizontalalignment='center', transform=ax.transAxes, fontsize=12,
+        fontweight=None, color='black')
+    fig.subplots_adjust(top=0.85)
+    ax.set_xlabel(YearLabel)
+    ax.set_ylabel('Extreme Events')
+    ax.set_title('5 Year Average Snowfall Extreme Evetns', fontweight='bold')
+    plt.plot(Years,SnowAve,  '-')
+    slope, intercept, r_value, p_value, std_err = stats.linregress(Years[mask],SnowAve[mask])
+    plt.plot(Years,intercept+slope*Years, 'r')
+    ax.text(0.95, 0.008, 'Trendline Slope: %f P Value: %f RSqrd Value: %f' 
+        % (slope, p_value, r_value), verticalalignment='bottom', 
+        horizontalalignment='right', transform=ax.transAxes, fontsize=8)
+    plt.savefig('%s/5_YearAve_SEE.%s' % (dir, f), dpi=None, 
+    facecolor='w', edgecolor='b', orientation='portrait', papertype=None, 
+    format=None, transparent=False, bbox_inches=None, pad_inches=0.1, 
+    frameon=None)
+    StationExports.append(slope)
+    StationExports.append(p_value)
+    StationExports.append(r_value)
+    plt.close()
+
+    ################################## 5 year ave SEE 
+    # Define the window size for the mean, add 1 to start at 1
+    Window = 10
+    # Define a temporary average value
+    WT = 0
+    # Define size of actual window, will be odd number
+    Size = Window-1
+    # # Define max limit for the analysis, the max index to run to
+    MaxV = (Lenght)-((Size-1)/2)
+    # Define the minimum value to start the analysis
+    MinV = ((Size-1)/2)
+    # Define center value of window
+    ModVars = []
+    for c in range(1, Window):
+        ModVars.append(c)
+    CenterV = np.median(ModVars)
+    # Define years centered at each average
+    Years = []
+    # Define averages for Snow EE
+    SnowAve = []
+    # print CenterV
+    # # Define a list of indexes for the analysis to go off of
+
+    for aItem in SnowMod:
+        if aItem[-1]>MinV and aItem[-1]<MaxV:
+            # Write the indexes for all neighboring data for average calc
+            TempI = []
+            for z in range(1, Window):
+                # This value will represent the modifying variables
+                IndexByz = int(z-CenterV)
+                # The index on the list item will modified to write a list of 
+                # index values equal to its neighboring data sets
+                TempI.append(IndexByz+aItem[-1])
+            # Filter by each index value selected
+            for Index in TempI:
+                for Mod in SnowMod:
+                    if Mod[-1]==Index:
+                        WT = WT+Mod[0]
+            SnowAve.append(WT/Size)
+            WT = 0
+
+    EndMod = int(Size/2)
+    for x in range(allData[0][-1]+EndMod, allData[-1][-1]-EndMod):
+        Years.append(x)
+
+    SnowAve = np.array(SnowAve)
+    Years = np.array(Years)
+
+    mask = ~np.isnan(Years) & ~np.isnan(SnowAve)
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    ax.grid(True)
+    ax.text(.5, 1.1, 'Station: %s' % (StationName), verticalalignment='center', 
+        horizontalalignment='center', transform=ax.transAxes, fontsize=12,
+        fontweight=None, color='black')
+    fig.subplots_adjust(top=0.85)
+    ax.set_xlabel(YearLabel)
+    ax.set_ylabel('Extreme Events')
+    ax.set_title('9 Year Average Snowfall Extreme Evetns', fontweight='bold')
+    plt.plot(Years,SnowAve,  '-')
+    slope, intercept, r_value, p_value, std_err = stats.linregress(Years[mask],SnowAve[mask])
+    plt.plot(Years,intercept+slope*Years, 'r')
+    ax.text(0.95, 0.008, 'Trendline Slope: %f P Value: %f RSqrd Value: %f' 
+        % (slope, p_value, r_value), verticalalignment='bottom', 
+        horizontalalignment='right', transform=ax.transAxes, fontsize=8)
+    plt.savefig('%s/9_YearAve_SEE.%s' % (dir, f), dpi=None, 
+    facecolor='w', edgecolor='b', orientation='portrait', papertype=None, 
+    format=None, transparent=False, bbox_inches=None, pad_inches=0.1, 
+    frameon=None)
+    StationExports.append(slope)
+    StationExports.append(p_value)
+    StationExports.append(r_value)
+    plt.close()
+
+
+    ########################################
     x = np.array(StudyYearList)
     DayStart = np.array(DayStart)
     ##********************************Start Dates
@@ -808,7 +1048,252 @@ def SnowFallAnalysis(StationName, RawData, SE, f,
     StationExports.append(p_value)
     StationExports.append(r_value)
     plt.close()
+    ##****************** 3 year average Annual Snowfall
+
+    YSFarray = np.array(YSFarray)
+    # mask = ~np.isnan(x) & ~np.isnan(YSFarray)
+    # Define the index values (years) and place them into the data records
+    SnowMod = []
+    i = 0
+    for aItem in YSFarray:
+        SnowMod.append([aItem, i])
+        i = i+1
+
+    # Define the lenght of the data set
+    Lenght =  len(SnowMod)
+    # print Lenght
+    # print SIdMod
+    # sys.exit()
+
+    # Define the window size for the mean, add 1 to start at 1
+    Window = 4
+    # Define a temporary average value
+    WT = 0
+    # Define size of actual window, will be odd number
+    Size = Window-1
+    # # Define max limit for the analysis, the max index to run to
+    MaxV = (Lenght)-((Size-1)/2)
+    # Define the minimum value to start the analysis
+    MinV = ((Size-1)/2)
+    # Define center value of window
+    ModVars = []
+    for c in range(1, Window):
+        ModVars.append(c)
+    CenterV = np.median(ModVars)
+    # Define years centered at each average
+    Years = []
+    # Define averages for Snow EE
+    SnowAve = []
+    # print CenterV
+    # # Define a list of indexes for the analysis to go off of
+
+    for aItem in SnowMod:
+        if aItem[-1]>MinV and aItem[-1]<MaxV:
+            # Write the indexes for all neighboring data for average calc
+            TempI = []
+            for z in range(1, Window):
+                # This value will represent the modifying variables
+                IndexByz = int(z-CenterV)
+                # The index on the list item will modified to write a list of 
+                # index values equal to its neighboring data sets
+                TempI.append(IndexByz+aItem[-1])
+            # Filter by each index value selected
+            for Index in TempI:
+                for Mod in SnowMod:
+                    if Mod[-1]==Index:
+                        WT = WT+Mod[0]
+            SnowAve.append(WT/Size)
+            WT = 0
+
+    EndMod = int(Size/2)
+    for x in range(allData[0][-1]+EndMod, allData[-1][-1]-EndMod):
+        Years.append(x)
+
+    SnowAve = np.array(SnowAve)
+    Years = np.array(Years)
+
+    mask = ~np.isnan(Years) & ~np.isnan(SnowAve)
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    ax.grid(True)
+    ax.text(.5, 1.1, 'Station: %s' % (StationName), verticalalignment='center', 
+        horizontalalignment='center', transform=ax.transAxes, fontsize=12,
+        fontweight=None, color='black')
+    fig.subplots_adjust(top=0.85)
+    ax.set_xlabel(YearLabel)
+    ax.set_ylabel('Average Annual Snowfall (mm)')
+    ax.set_title('3 Year Average Annual Snowfall', fontweight='bold')
+    plt.plot(Years,SnowAve,  '-')
+    slope, intercept, r_value, p_value, std_err = stats.linregress(Years[mask],SnowAve[mask])
+    plt.plot(Years,intercept+slope*Years, 'r')
+    ax.text(0.95, 0.008, 'Trendline Slope: %f P Value: %f RSqrd Value: %f' 
+        % (slope, p_value, r_value), verticalalignment='bottom', 
+        horizontalalignment='right', transform=ax.transAxes, fontsize=8)
+    plt.savefig('%s/3_YearAve_AnnSnowfall.%s' % (dir, f), dpi=None, 
+    facecolor='w', edgecolor='b', orientation='portrait', papertype=None, 
+    format=None, transparent=False, bbox_inches=None, pad_inches=0.1, 
+    frameon=None)
+    StationExports.append(slope)
+    StationExports.append(p_value)
+    StationExports.append(r_value)
+    # plt.show()
+    plt.close()
+
+    ##****************** 5 year average Annual Snowfall
+    # Define the window size for the mean, add 1 to start at 1
+    Window = 6
+    # Define a temporary average value
+    WT = 0
+    # Define size of actual window, will be odd number
+    Size = Window-1
+    # # Define max limit for the analysis, the max index to run to
+    MaxV = (Lenght)-((Size-1)/2)
+    # Define the minimum value to start the analysis
+    MinV = ((Size-1)/2)
+    # Define center value of window
+    ModVars = []
+    for c in range(1, Window):
+        ModVars.append(c)
+    CenterV = np.median(ModVars)
+    # Define years centered at each average
+    Years = []
+    # Define averages for Snow EE
+    SnowAve = []
+    # print CenterV
+    # # Define a list of indexes for the analysis to go off of
+
+    for aItem in SnowMod:
+        if aItem[-1]>MinV and aItem[-1]<MaxV:
+            # Write the indexes for all neighboring data for average calc
+            TempI = []
+            for z in range(1, Window):
+                # This value will represent the modifying variables
+                IndexByz = int(z-CenterV)
+                # The index on the list item will modified to write a list of 
+                # index values equal to its neighboring data sets
+                TempI.append(IndexByz+aItem[-1])
+            # Filter by each index value selected
+            for Index in TempI:
+                for Mod in SnowMod:
+                    if Mod[-1]==Index:
+                        WT = WT+Mod[0]
+            SnowAve.append(WT/Size)
+            WT = 0
+
+    EndMod = int(Size/2)
+    for x in range(allData[0][-1]+EndMod, allData[-1][-1]-EndMod):
+        Years.append(x)
+
+    SnowAve = np.array(SnowAve)
+    Years = np.array(Years)
+
+    mask = ~np.isnan(Years) & ~np.isnan(SnowAve)
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    ax.grid(True)
+    ax.text(.5, 1.1, 'Station: %s' % (StationName), verticalalignment='center', 
+        horizontalalignment='center', transform=ax.transAxes, fontsize=12,
+        fontweight=None, color='black')
+    fig.subplots_adjust(top=0.85)
+    ax.set_xlabel(YearLabel)
+    ax.set_ylabel('Average Annual Snowfall (mm)')
+    ax.set_title('5 Year Average Annual Snowfall', fontweight='bold')
+    plt.plot(Years,SnowAve,  '-')
+    slope, intercept, r_value, p_value, std_err = stats.linregress(Years[mask],SnowAve[mask])
+    plt.plot(Years,intercept+slope*Years, 'r')
+    ax.text(0.95, 0.008, 'Trendline Slope: %f P Value: %f RSqrd Value: %f' 
+        % (slope, p_value, r_value), verticalalignment='bottom', 
+        horizontalalignment='right', transform=ax.transAxes, fontsize=8)
+    plt.savefig('%s/5_YearAve_AnnSnowfall.%s' % (dir, f), dpi=None, 
+    facecolor='w', edgecolor='b', orientation='portrait', papertype=None, 
+    format=None, transparent=False, bbox_inches=None, pad_inches=0.1, 
+    frameon=None)
+    StationExports.append(slope)
+    StationExports.append(p_value)
+    StationExports.append(r_value)
+    # plt.show()
+    plt.close()
+
+    ##****************** 9 year average Annual Snowfall
+    # Define the window size for the mean, add 1 to start at 1
+    Window = 10
+    # Define a temporary average value
+    WT = 0
+    # Define size of actual window, will be odd number
+    Size = Window-1
+    # # Define max limit for the analysis, the max index to run to
+    MaxV = (Lenght)-((Size-1)/2)
+    # Define the minimum value to start the analysis
+    MinV = ((Size-1)/2)
+    # Define center value of window
+    ModVars = []
+    for c in range(1, Window):
+        ModVars.append(c)
+    CenterV = np.median(ModVars)
+    # Define years centered at each average
+    Years = []
+    # Define averages for Snow EE
+    SnowAve = []
+    # print CenterV
+    # # Define a list of indexes for the analysis to go off of
+
+    for aItem in SnowMod:
+        if aItem[-1]>MinV and aItem[-1]<MaxV:
+            # Write the indexes for all neighboring data for average calc
+            TempI = []
+            for z in range(1, Window):
+                # This value will represent the modifying variables
+                IndexByz = int(z-CenterV)
+                # The index on the list item will modified to write a list of 
+                # index values equal to its neighboring data sets
+                TempI.append(IndexByz+aItem[-1])
+            # Filter by each index value selected
+            for Index in TempI:
+                for Mod in SnowMod:
+                    if Mod[-1]==Index:
+                        WT = WT+Mod[0]
+            SnowAve.append(WT/Size)
+            WT = 0
+
+    EndMod = int(Size/2)
+    for x in range(allData[0][-1]+EndMod, allData[-1][-1]-EndMod):
+        Years.append(x)
+
+    SnowAve = np.array(SnowAve)
+    Years = np.array(Years)
+
+    mask = ~np.isnan(Years) & ~np.isnan(SnowAve)
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    ax.grid(True)
+    ax.text(.5, 1.1, 'Station: %s' % (StationName), verticalalignment='center', 
+        horizontalalignment='center', transform=ax.transAxes, fontsize=12,
+        fontweight=None, color='black')
+    fig.subplots_adjust(top=0.85)
+    ax.set_xlabel(YearLabel)
+    ax.set_ylabel('Average Annual Snowfall (mm)')
+    ax.set_title('9 Year Average Annual Snowfall', fontweight='bold')
+    plt.plot(Years,SnowAve,  '-')
+    slope, intercept, r_value, p_value, std_err = stats.linregress(Years[mask],SnowAve[mask])
+    plt.plot(Years,intercept+slope*Years, 'r')
+    ax.text(0.95, 0.008, 'Trendline Slope: %f P Value: %f RSqrd Value: %f' 
+        % (slope, p_value, r_value), verticalalignment='bottom', 
+        horizontalalignment='right', transform=ax.transAxes, fontsize=8)
+    plt.savefig('%s/9_YearAve_AnnSnowfall.%s' % (dir, f), dpi=None, 
+    facecolor='w', edgecolor='b', orientation='portrait', papertype=None, 
+    format=None, transparent=False, bbox_inches=None, pad_inches=0.1, 
+    frameon=None)
+    StationExports.append(slope)
+    StationExports.append(p_value)
+    StationExports.append(r_value)
+    # plt.show()
+    plt.close()
     ##************** Standard Dev
+    # Define x again 
+    x = np.array(StudyYearList)
     AnnualSnowfallSTD = np.array(AnnualSnowfallSTD)
     mask = ~np.isnan(x) & ~np.isnan(AnnualSnowfallSTD)
     fig = plt.figure()
@@ -849,12 +1334,6 @@ def SnowFallAnalysis(StationName, RawData, SE, f,
     ###**************Additional Data Check****************
     # MissingYears consists of years with less than 2 records of snowfall
     StationExports.append(len(MissingYears))
-
-    # Export the EE data per year, this will be used later in other sections
-    i = 0
-    for Year in x:
-        EE.append([Year, EED[i]])
-        i = i+1
 
     # Export the rest of the data
 

@@ -6,19 +6,19 @@ sys.path.append("INPUT_DATA")
 sys.path.append("INPUT_DATA/Output")
 
 ############################# Mute for autorun
-# # Determine data location based upon data download method
-# FilterOptions = ['Country', 'Station/City', 'State/Province']
-# df = pd.DataFrame(FilterOptions,index=[1, 2, 3], columns = ["SELECTION PARAMETERS"])
-# print df
-# print(' \n**********CHOOSE DATA SELECTION METHOD**********\n ')
-# selection = 'INDEX'           
-# Data = 'SELECTION PARAMETERS'
-# query = input('Which method was used to download the data?:')
-# query = int(query)
+# Determine data location based upon data download method
+FilterOptions = ['Country', 'Station/City', 'State/Province']
+df = pd.DataFrame(FilterOptions,index=[1, 2, 3], columns = ["SELECTION PARAMETERS"])
+print df
+print(' \n**********CHOOSE DATA SELECTION METHOD**********\n ')
+selection = 'INDEX'           
+Data = 'SELECTION PARAMETERS'
+query = input('Which method was used to download the data?:')
+query = int(query)
 ############################ Mute for autorun
 
 # Autorun
-query = 2
+# query = 2
 
 # Write main output folder
 dir = 'Output'
@@ -79,13 +79,16 @@ if query == 2:
   Stations = Data[-1]
   Name = Data[1]
 
-# # Autorun
+# Time Variables. SE, MonthX, and DayX are specific to Snowfall and Temperature.
+# Annual temperature trends will be calculated using the same year setup.
 SE = 0.95
 f = 'png'
 FirstYear = 1965
 FinalYear = 2018
 YearLabel = 'Year'
 MonthX = 7
+# Define Day each month will start at for MonthX
+Dayx = 1
 
 ############################## Mute for autorun
 
@@ -125,22 +128,37 @@ MonthX = 7
 # query = raw_input('Define Year Labels for x-axis on Figures (i.e. Hydro Year):')
 # YearLabel = str(query)
 
-# Define Day each month will start at for MonthX
-Dayx = 1
-
 
 # Define final output header. Length determines if
 # records will be rejected.
-Header = ['Station', 'State', 'Country', 'Elevation', 
-  'Lat', 'Long', 'MonthCov', 'DailyCov', 'TempCov', 
-  'SnowCov', 'RainCov', 'Min CDF', 'Day Start Slp',
+Header = ['Station', 'State', 'Country', 'Elevation',
+  # Basic Station information and data coverage  
+  'Lat', 'Long', 'MonthCov', 'DailyCov', 'TempCov',
+  # Min CDF is snowfall mm limit for that station, 3yr average
+  # extreme evetns is next. Followed by the 5 and 9 year moving EE ave. 
+  'SnowCov', 'RainCov', 'Min CDF', '3yrAveSEE Slp', 
+  '3yrAveSEE Pval', '3yrAveSEE Rval', '5yrAveSEE Slp', 
+  '5yrAveSEE Pval', '5yrAveSEE Rval','9yrAveSEE Slp', 
+  # The day end and starts refer to the beginning of a snow season
+  # as well as its end. Leading into the lenght of the season.
+  '9yrAveSEE Pval', '9yrAveSEE Rval','Day Start Slp',
   'Day Start Pval', 'Day Start Rval', 'Day End Slp',
   'Day End Pval', 'Day End Rval', 'Snow S len Slp',
+  # Extreme events here are per annum, not a rolling average.
   'Snow S len Pval', 'Snow S len Rval', 'Extrm Evnt Slp',
+  # Total snow days per year is given below
   'Extrm Evnt Pval', 'Extrm Evnt Rval', 'Tot Snw Dy Slp',
+  # Annual snowfall totals are graphed, followed by moving 
+  # averages of 3, 5, and 9 years
   'Tot Snw Dy Pval', 'Tot Snw Dy Rval', 'Ann Snw Ttl Slp',
-  'Ann Snw Ttl Pval', 'Ann Snw Ttl Rval', 'Ann Snw STD Slp',
+  'Ann Snw Ttl Pval', 'Ann Snw Ttl Rval', '3yrAveSf Slp',
+  '3yrAveSf Pval', '3yrAveSf Rval', '5yrAveSf Slp',
+  '5yrAveSf Pval', '5yrAveSf Rval','9yrAveSf Slp',
+  # The annual STD for snow events is graphed, followed by missing
+  # snow years, or years of no snow.
+  '9yrAveSf Pval', '9yrAveSf Rval','Ann Snw STD Slp',
   'Ann Snw STD Pval', 'Ann Snw STD Rval', 'MissingSnowYear',
+  # Temperature data, monthly followed by season.
   'JanAve Slp', 'JanAve Pval', 'JanAve Rval', 
   'JanSTD Slp', 'JanSDT Pval', 'JanSTD Rval',
   'FebAve Slp', 'FebAve Pval', 'FebAve Rval', 
@@ -173,14 +191,34 @@ Header = ['Station', 'State', 'Country', 'Elevation',
   'WinterSTD Slp', 'WinterSDT Pval', 'WinterSTD Rval',
   'SpringAve Slp', 'SpringAve Pval', 'SpringAve Rval', 
   'SpringSTD Slp', 'SpringSDT Pval', 'SpringSTD Rval',
+  # Annual temperature is based upon the snowfall clip date
+  # this means the year goes from July to June of the following year.
+  # This was done to focus the average over the fall, winter, and spring 
+  # seasons.
   'AnnualAve Slp', 'AnnualAve Pval', 'AnnualAve Rval', 
   'AnnualSTD Slp', 'AnnualSDT Pval', 'AnnualSTD Rval',
+  # Precipitation is part of the Seasonality analysis. 
+  # Includes both solid and liquid precip. The years used for this
+  # are standard.
   'SprPrecip', 'SumPrecip', 'FallPrecip', 'WinPrecip',
   'WinSsn Slp', 'WinSsn Pval', 'WinSsn Rval', 'SprSsn Slp',
   'SprSsn Pval', 'SprSsn Rval', 'SumSsn Slp', 'SumSsn Pval',
   'SumSsn Rval', 'FallSsn Slp', 'FallSsn Pval', 'FallSsn Rval',
-  'AveSI Slp', 'AveSI Pval', 'AveSI Rval', 'AnnualRain Slp', 
-  'AnnualRain Pval', 'AnnualRain Rval']
+  'Ave3SI Slp', 'Ave3SI Pval', 'Ave3SI Rval', 'Ave5SI Slp', 
+  'Ave5SI Pval', 'Ave5SI Rval', 'Ave9SI Slp', 'Ave9SI Pval', 
+  'Ave9SI Rval','Ave3Precip Slp',
+  'Ave3Precip Pval','Ave3Precip Rval', 'Ave6Precip Slp',
+  'Ave6Precip Pval','Ave6Precip Rval', 'Ave9Precip Slp',
+  # Rainfall is analyzed after Seasonality, the years used for this
+  # are standard.
+  'Ave9Precip Pval','Ave9Precip Rval', 'AnnualRain Slp', 
+  'AnnualRain Pval', 'AnnualRain Rval', '3yrAveRain Slp', 
+  '3yrAveRain Pval', '3yrAveRain Rval', '5yrAveRain Slp', 
+  '5yrAveRain Pval', '5yrAveRain Rval', '9yrAveRain Slp', 
+  '9yrAveRain Pval', '9yrAveRain Rval', 'AREE Slp', 'AREE Pval',
+  'AREE Rval', '3AveREE Slp', '3AveREE Pval', '3AveREE Rval',
+  '5AveREE Slp', '5AveREE Pval', '5AveREE Rval', '9AveREE Slp', 
+  '9AveREE Pval', '9AveREE Rval']
 
 
 
@@ -261,6 +299,10 @@ for i in tqdm.tqdm(range(ProgBarLimit)):
   except:
     if 'PRCP' not in Data:
       Data['PRCP'] = np.nan
+    if 'TMAX' not in Data:
+      Data['TMAX'] = np.nan
+    if 'TMIN' not in Data:
+      Data['TMIN'] = np.nan
     Data = Data[['MM/DD/YYYY', 'PRCP', 'SNOW', 'TMAX', 'TMIN']]
   # Fill in missing dates with nan records to close data gaps.
 
@@ -290,32 +332,20 @@ for i in tqdm.tqdm(range(ProgBarLimit)):
   # years in the data to later fill with null values. Datetime format
   # is required to compare the sets.
 
-  # WORK Dates seem to be doubled and have float(nan) for dates 
-
-  # Python code the get difference of two lists 
-  # Not using set()
-  list2 = idxForm
-
-  list1 = indexForm
   def diff(list1, list2):
       c = set(list1).union(set(list2))  # or c = set(list1) | set(list2)
       d = set(list1).intersection(set(list2))  # or d = set(list1) & set(list2)
       return list(c - d)
   
   # Write list of dates only found in full date recordset. Then fill
-  # the dataframe with nan values.
-  diff = (diff(list1, list2))
+  # the dataframe with nan values. These values will be used to
+  # complete the entire data set.
+  diff = (diff(indexForm, idxForm))
   df = pd.DataFrame({'NewDate' : diff})
   df['PRCP'] = np.nan
   df['SNOW'] = np.nan
   df['TMAX'] = np.nan
   df['TMIN'] = np.nan
-
-  # New df of full dates
-  df2 = pd.DataFrame({'Date' : idxForm})
-  df2['NewDate'] = df2['Date']
-  FullDate = df2['NewDate'].tolist()
-  FormatedDate = df2['Date'].tolist()
 
   # Functions wont read dates before 1900,
   # used for loop to parse date manually.
@@ -324,15 +354,14 @@ for i in tqdm.tqdm(range(ProgBarLimit)):
   # a string of only the year-month-day. Drops
   # the hour-minute-second extension.
   Fix = []
-  for aItem in FormatedDate:
+  for aItem in idxForm:
     date = aItem[0:10]
     Fix.append(date)
 
   # Prep the fixed dates for merge. This combines
   # the re-formatted dates with the initial format
   # for the dataframe to be merged with.
-  df2 = []
-  df2 = pd.DataFrame({'NewDate' : FullDate})
+  df2 = pd.DataFrame({'NewDate' : idxForm})
   df3 = pd.DataFrame({'FixedDate' : Fix})
   df4 = df2.join(df3, how='outer')
 
@@ -345,16 +374,14 @@ for i in tqdm.tqdm(range(ProgBarLimit)):
   # Make list of index
   m = 0
   IFix = []
-  for aItem in list1:
-    IFix.append(i)
+  for aItem in indexForm:
+    IFix.append(m)
     m = m+1
 
   # Failed 12/8/19
-  # Data['NewDate'] = list1
+  # Data['NewDate'] = IFix
 
-  
-  Data.loc[IFix,'NewDate'] = list1
-  # print Data
+  Data.loc[IFix,'NewDate'] = indexForm
  ##################################################################################
   # Merge Data with the df containing the missing data. This
   # writes DataFull.
@@ -373,11 +400,9 @@ for i in tqdm.tqdm(range(ProgBarLimit)):
   DataFull = DataFull.rename(columns={'PRCP_y': 'PRCP', 'SNOW_y': 'SNOW', 'TMAX_y': 'TMAX', 'TMIN_y': 'TMIN'})
   
   # Merge the dates in correct format to main dataframe
-
-  # DataFull = pd.merge(DataFull, df4, on='NewDate', how='outer')
-  # DataFull = DataFull.merge(df4, on = 'NewDate', how='outer')
-  DataFull = DataFull.merge(df4, how='outer', left_on = 'NewDate', right_on = 'NewDate')
-
+  # DataFull = pd.merge(DataFull, df4, on='NewDate')
+  DataFull = DataFull.merge(df4, on = 'NewDate', how='outer')
+  # DataFull = DataFull.merge(df4, how='outer', left_on = 'NewDate', right_on = 'NewDate')
 
   DataFull = DataFull.drop(columns=['NewDate', 'MM/DD/YYYY'])
   DataFull = DataFull[['FixedDate', 'PRCP', 'SNOW', 'TMAX', 'TMIN']]
@@ -449,7 +474,6 @@ for i in tqdm.tqdm(range(ProgBarLimit)):
       StationExports, Dayx, MonthX, YearLabel, WinterStats, WSY,
       MissingSnowData, BaseData, SingleYearSnowfall, EE, StandardSnow)
 
-    # Place before temp section as the data for precip will be removed in temp
     from Temperature_Analysis import *
     Temperature(RawData, StationName, f, BaseData, 
       StationExports, OmitYearsT, YearLabel)

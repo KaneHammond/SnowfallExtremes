@@ -18,9 +18,9 @@ def Split_Data(Data, StationName, f, FirstYear, RawData,
 
     #Coverage Outputs
     OutputLoc = dir+'/'+subfolder_name+'/'
-    #DATA FORMAT: [Date, Precip, Snow, Tmax, Tmin, TOBS]
+    #DATA FORMAT: [Date, Precip, Snow, Tmax, Tmin]
     # This section does not remove any records. Only converts available data to float.
-    allData = []
+    TempData = []
     for aRow in Data:
         splitDateInfo = aRow[0].split('-')
         for aItem in splitDateInfo:
@@ -35,26 +35,34 @@ def Split_Data(Data, StationName, f, FirstYear, RawData,
             aRow[-3] = float (aRow[-3])
         if aRow[-4]!="":
             aRow[-4] = float (aRow[-4])
-        if aRow[-5]!="":
-            aRow[-5] = float (aRow[-5])
-        allData.append(aRow)
+        TempData.append(aRow)
     # Convert the parsed date data to a pandas dataframe to 
     # re-organize the date format to match initial program design
-    df = pd.DataFrame(allData)
-    df = df[[2, 0, 1, 3, 4, 5, 6, 7]]
-    allData = df.values.tolist()
+    df = pd.DataFrame(TempData)
+    df = df[[2, 0, 1, 3, 4, 5, 6]]
+    TempData = df.values.tolist()
     # Convert the re-ordered date info back to int
-    for aRow in allData:
+    for aRow in TempData:
         aRow[0] = int(aRow[0])
         aRow[1] = int(aRow[1])
         aRow[2] = int(aRow[2])
 
     # Keep base rcord data without year HY or Clip trim.
-    for aRow in allData:
+    for aRow in TempData:
         if aRow[0]>=FirstYear:
             if aRow[0]<=FinalYear:
                 BaseData.append(aRow)
 
+    # Quick fix*** Was written to rely on TOBS to be accounted for.
+    # Removed from dependencies and will place a nan there for now.
+    allData = []
+
+    for aRow in TempData:
+        tt = []
+        for aItem in aRow:
+            tt.append(aItem)
+        tt.append(np.nan)
+        allData.append(tt)
     #***************************************TRIM YEARS*********************
   
     #*****Format [Year, DD, MM, Precip, Snow, Tmax, Tmin, TOBS]

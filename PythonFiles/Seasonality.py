@@ -89,32 +89,32 @@ def Seasonality(StationName, RawData, SE, f,
 						# This will include SWE
 						# Estimate a 1/10 ratio of snow water equivalent
 						tempRain = tempRain+(aRow[4]/10)
-				if aRow[2] != im:
-					# Modify the month if it has changed
-					# Record the month
-					Months.append(im)
-					# Record the year for that month
-					Years.append(YearTemp)
-					# Record the total rain for that month
-					MonthlyRainfall.append(tempRain)
-					tempRain = 0
-					# Variables have been reset. Record the data
-					# for the record passing. Var converts row value
-					# to int value. Has issues using direct row value.
-					var = int(aRow[2])
-					im = var
-					# Define our variables of interest from the passed data record
+			if aRow[2] != im:
+				# Modify the month if it has changed
+				# Record the month
+				Months.append(im)
+				# Record the year for that month
+				Years.append(YearTemp)
+				# Record the total rain for that month
+				MonthlyRainfall.append(tempRain)
+				tempRain = 0
+				# Variables have been reset. Record the data
+				# for the record passing. Var converts row value
+				# to int value. Has issues using direct row value.
+				var = int(aRow[2])
+				im = var
+				# Define our variables of interest from the passed data record
+				YearTemp = aRow[-1]
+				if np.isnan(aRow[3]) != True:
+					# Verify it is not nan
+					# Record the year
 					YearTemp = aRow[-1]
-					if np.isnan(aRow[3]) != True:
-						# Verify it is not nan
-						# Record the year
-						YearTemp = aRow[-1]
-						# Record the rain data
-						tempRain = tempRain+aRow[3]
-					if np.isnan(aRow[4]) != True:
-						# This will include SWE
-						# Estimate a 1/10 ratio of snow water equivalent
-						tempRain = tempRain+(aRow[4]/10)
+					# Record the rain data
+					tempRain = tempRain+aRow[3]
+				if np.isnan(aRow[4]) != True:
+					# This will include SWE
+					# Estimate a 1/10 ratio of snow water equivalent
+					tempRain = tempRain+(aRow[4]/10)
 		if aRow[-1]!=i:
 			# If our year has changed, we need to now extract data
 			# as well as change the variables for the next loop
@@ -618,7 +618,7 @@ def Seasonality(StationName, RawData, SE, f,
 		i = i+1
 
 
-	###################################### Running mean SI
+	###################################### Running mean SI 3 Year
 	# Format: RAWDATA [Year, DD, MM, Precip, Snow, Tmax, Tmin, TOBS, Hydro Year]
 	# Format: STANDARDSNOW [Annual Snowfall, Snow Days, Daily Ave, Start D, End D, Season Length]
 
@@ -712,6 +712,396 @@ def Seasonality(StationName, RawData, SE, f,
 	StationExports.append(p_value)
 	StationExports.append(r_value)
 
+	###################################### Running mean SI 5 Year
+	# Define the window size for the mean, add 1 to start at 1
+	Window = 6
+	# Define a temporary average value
+	WT = 0
+	# Define size of actual window, will be odd number
+	Size = Window-1
+	# # Define max limit for the analysis, the max index to run to
+	MaxV = (Lenght)-((Size-1)/2)
+	# Define the minimum value to start the analysis
+	MinV = ((Size-1)/2)
+	# Define center value of window
+	ModVars = []
+	for c in range(1, Window):
+		ModVars.append(c)
+	CenterV = np.median(ModVars)
+	# Define years centered at each average
+	Years = []
+	# Define averages for SI
+	SIave = []
+	# print CenterV
+	# # Define a list of indexes for the analysis to go off of
+
+	for aItem in SIdMod:
+		if aItem[-1]>MinV and aItem[-1]<MaxV:
+			# Write the indexes for all neighboring data for average calc
+			TempI = []
+			for z in range(1, Window):
+				# This value will represent the modifying variables
+				IndexByz = int(z-CenterV)
+				# The index on the list item will modified to write a list of 
+				# index values equal to its neighboring data sets
+				TempI.append(IndexByz+aItem[-1])
+			# Filter by each index value selected
+			for Index in TempI:
+				for Mod in SIdMod:
+					if Mod[-1]==Index:
+						WT = WT+Mod[0]
+			SIave.append(WT/Size)
+			WT = 0
+
+	# Define central years for each average
+	EndMod = int(Size/2)
+	for x in range(BaseData[0][0]+EndMod, BaseData[-1][0]-EndMod):
+		Years.append(x)
+
+	# Plot our average seasonality index
+
+	SeasonalityIndex = np.array(SIave)
+	xi = np.array(Years)
+	mask = ~np.isnan(xi) & ~np.isnan(SeasonalityIndex)
+	fig = plt.figure()
+	ax = fig.add_subplot(111)
+	ax.grid(True)
+	ax.text(.5, 1.1, 'Station: %s' % (StationName), verticalalignment='center', 
+	    horizontalalignment='center', transform=ax.transAxes, fontsize=12,
+	    fontweight=None, color='black')
+	fig.subplots_adjust(top=0.85)
+	ax.set_xlabel(YearLabel)
+	ax.set_ylabel('Seasonality Index')
+	ax.set_title('Mean Seasonality Index(%i Year Average)' % (Size), fontweight='bold')
+	plt.plot(xi,SeasonalityIndex,  '-')
+	slope, intercept, r_value, p_value, std_err = stats.linregress(xi[mask], SeasonalityIndex[mask])
+	plt.plot(xi,intercept+slope*xi, 'r')
+	ax.text(0.95, 0.01, 'Trendline Slope: %f P Value: %f RSqrd Value: %f' % 
+	    (slope, p_value, r_value), verticalalignment='bottom', 
+	    horizontalalignment='right', transform=ax.transAxes, fontsize=8)
+	plt.savefig('%s%s_Year_Mean_SI.%s' % (Output, str(Size), f))
+	# plt.show()
+	plt.close()
+	StationExports.append(slope)
+	StationExports.append(p_value)
+	StationExports.append(r_value)
+
+	###################################### Running mean SI 9 Year
+	# Define the window size for the mean, add 1 to start at 1
+	Window = 10
+	# Define a temporary average value
+	WT = 0
+	# Define size of actual window, will be odd number
+	Size = Window-1
+	# # Define max limit for the analysis, the max index to run to
+	MaxV = (Lenght)-((Size-1)/2)
+	# Define the minimum value to start the analysis
+	MinV = ((Size-1)/2)
+	# Define center value of window
+	ModVars = []
+	for c in range(1, Window):
+		ModVars.append(c)
+	CenterV = np.median(ModVars)
+	# Define years centered at each average
+	Years = []
+	# Define averages for SI
+	SIave = []
+	# print CenterV
+	# # Define a list of indexes for the analysis to go off of
+
+	for aItem in SIdMod:
+		if aItem[-1]>MinV and aItem[-1]<MaxV:
+			# Write the indexes for all neighboring data for average calc
+			TempI = []
+			for z in range(1, Window):
+				# This value will represent the modifying variables
+				IndexByz = int(z-CenterV)
+				# The index on the list item will modified to write a list of 
+				# index values equal to its neighboring data sets
+				TempI.append(IndexByz+aItem[-1])
+			# Filter by each index value selected
+			for Index in TempI:
+				for Mod in SIdMod:
+					if Mod[-1]==Index:
+						WT = WT+Mod[0]
+			SIave.append(WT/Size)
+			WT = 0
+
+	# Define central years for each average
+	EndMod = int(Size/2)
+	for x in range(BaseData[0][0]+EndMod, BaseData[-1][0]-EndMod):
+		Years.append(x)
+
+	# Plot our average seasonality index
+
+	SeasonalityIndex = np.array(SIave)
+	xi = np.array(Years)
+	mask = ~np.isnan(xi) & ~np.isnan(SeasonalityIndex)
+	fig = plt.figure()
+	ax = fig.add_subplot(111)
+	ax.grid(True)
+	ax.text(.5, 1.1, 'Station: %s' % (StationName), verticalalignment='center', 
+	    horizontalalignment='center', transform=ax.transAxes, fontsize=12,
+	    fontweight=None, color='black')
+	fig.subplots_adjust(top=0.85)
+	ax.set_xlabel(YearLabel)
+	ax.set_ylabel('Seasonality Index')
+	ax.set_title('Mean Seasonality Index(%i Year Average)' % (Size), fontweight='bold')
+	plt.plot(xi,SeasonalityIndex,  '-')
+	slope, intercept, r_value, p_value, std_err = stats.linregress(xi[mask], SeasonalityIndex[mask])
+	plt.plot(xi,intercept+slope*xi, 'r')
+	ax.text(0.95, 0.01, 'Trendline Slope: %f P Value: %f RSqrd Value: %f' % 
+	    (slope, p_value, r_value), verticalalignment='bottom', 
+	    horizontalalignment='right', transform=ax.transAxes, fontsize=8)
+	plt.savefig('%s%s_Year_Mean_SI.%s' % (Output, str(Size), f))
+	# plt.show()
+	plt.close()
+	StationExports.append(slope)
+	StationExports.append(p_value)
+	StationExports.append(r_value)
+
+
+	########################## 3 year average annual precip
+
+	PrecipMod = []
+	i = 0
+	for aItem in AnnualSum:
+		PrecipMod.append([aItem, i])
+		i = i+1
+
+	# Define the lenght of the data set
+	Lenght =  len(PrecipMod)
+	# print Lenght
+	# print SIdMod
+	# sys.exit()
+
+	# Define the window size for the mean, add 1 to start at 1
+	Window = 4
+	# Define a temporary average value
+	WT = 0
+	# Define size of actual window, will be odd number
+	Size = Window-1
+	# # Define max limit for the analysis, the max index to run to
+	MaxV = (Lenght)-((Size-1)/2)
+	# Define the minimum value to start the analysis
+	MinV = ((Size-1)/2)
+	# Define center value of window
+	ModVars = []
+	for c in range(1, Window):
+		ModVars.append(c)
+	CenterV = np.median(ModVars)
+	# Define years centered at each average
+	Years = []
+	# Define averages for SI
+	Precipave = []
+	# print CenterV
+	# # Define a list of indexes for the analysis to go off of
+
+	for aItem in PrecipMod:
+		if aItem[-1]>MinV and aItem[-1]<MaxV:
+			# Write the indexes for all neighboring data for average calc
+			TempI = []
+			for z in range(1, Window):
+				# This value will represent the modifying variables
+				IndexByz = int(z-CenterV)
+				# The index on the list item will modified to write a list of 
+				# index values equal to its neighboring data sets
+				TempI.append(IndexByz+aItem[-1])
+			# Filter by each index value selected
+			for Index in TempI:
+				for Mod in PrecipMod:
+					if Mod[-1]==Index:
+						WT = WT+Mod[0]
+			Precipave.append(WT/Size)
+			WT = 0
+
+
+	# Define central years for each average
+	EndMod = int(Size/2)
+	for x in range(BaseData[0][0]+EndMod, BaseData[-1][0]-EndMod):
+		Years.append(x)
+
+	fig, ax = plt.subplots(1, 1)
+	Years = np.array(Years)
+	S = np.array(Precipave)
+	mask = ~np.isnan(Years) & ~np.isnan(S)
+	ax.grid(True)
+	ax.plot(Years, S, label='Rainfall Total (mm)')
+	# ax.plot(x, y2, label='Reversed emp.')
+	ax.legend(loc='upper right')
+	ax.set_title('Annual Precipitation (3 Year Average)')
+	ax.set_xlabel('Central Year')
+	ax.set_ylabel('Average Rainfall (mm)')
+	# ax.set_yticks([0.2, 0.4, 0.6, 0.8, 1], minor=False)
+	ax.set_yticks([0.9], minor=True)
+	# ax.yaxis.grid(True, which='major', color='g', linewidth=0.5)
+	ax.yaxis.grid(True, which='minor', color='r', linewidth=1.25)
+	slope, intercept, r_value, p_value, std_err = stats.linregress(Years[mask], S[mask])
+	plt.plot(Years,intercept+slope*Years, 'r')
+	ax.text(0.95, 0.01, 'Trendline Slope: %f P Value: %f RSqrd Value: %f' % 
+	    (slope, p_value, r_value), verticalalignment='bottom', 
+	    horizontalalignment='right', transform=ax.transAxes, fontsize=8)
+	plt.savefig('%s/3_YearAve_Annual_Precipitation.%s' % (Output, f), 
+		dpi=None, facecolor='w', edgecolor='b', orientation='portrait', 
+		papertype=None, format=None, transparent=False, bbox_inches=None, 
+		pad_inches=0.1, frameon=None)
+	# plt.show()
+	plt.close()
+	StationExports.append(slope)
+	StationExports.append(p_value)
+	StationExports.append(r_value)
+
+	########################## 5 year average annual precip
+	# Define the window size for the mean, add 1 to start at 1
+	Window = 6
+	# Define a temporary average value
+	WT = 0
+	# Define size of actual window, will be odd number
+	Size = Window-1
+	# # Define max limit for the analysis, the max index to run to
+	MaxV = (Lenght)-((Size-1)/2)
+	# Define the minimum value to start the analysis
+	MinV = ((Size-1)/2)
+	# Define center value of window
+	ModVars = []
+	for c in range(1, Window):
+		ModVars.append(c)
+	CenterV = np.median(ModVars)
+	# Define averages for SI
+	Precipave = []
+	# Define years centered at each average
+	Years = []
+	# # Define a list of indexes for the analysis to go off of
+
+	for aItem in PrecipMod:
+		if aItem[-1]>MinV and aItem[-1]<MaxV:
+			# Write the indexes for all neighboring data for average calc
+			TempI = []
+			for z in range(1, Window):
+				# This value will represent the modifying variables
+				IndexByz = int(z-CenterV)
+				# The index on the list item will modified to write a list of 
+				# index values equal to its neighboring data sets
+				TempI.append(IndexByz+aItem[-1])
+			# Filter by each index value selected
+			for Index in TempI:
+				for Mod in PrecipMod:
+					if Mod[-1]==Index:
+						WT = WT+Mod[0]
+			Precipave.append(WT/Size)
+			WT = 0
+
+
+	# Define central years for each average
+	EndMod = int(Size/2)
+	for x in range(BaseData[0][0]+EndMod, BaseData[-1][0]-EndMod):
+		Years.append(x)
+
+	fig, ax = plt.subplots(1, 1)
+	Years = np.array(Years)
+	S = np.array(Precipave)
+	mask = ~np.isnan(Years) & ~np.isnan(S)
+	ax.grid(True)
+	ax.plot(Years, S, label='Rainfall Total (mm)')
+	# ax.plot(x, y2, label='Reversed emp.')
+	ax.legend(loc='upper right')
+	ax.set_title('Annual Precipitation (5 Year Average)')
+	ax.set_xlabel('Central Year')
+	ax.set_ylabel('Average Rainfall (mm)')
+	# ax.set_yticks([0.2, 0.4, 0.6, 0.8, 1], minor=False)
+	ax.set_yticks([0.9], minor=True)
+	# ax.yaxis.grid(True, which='major', color='g', linewidth=0.5)
+	ax.yaxis.grid(True, which='minor', color='r', linewidth=1.25)
+	slope, intercept, r_value, p_value, std_err = stats.linregress(Years[mask], S[mask])
+	plt.plot(Years,intercept+slope*Years, 'r')
+	ax.text(0.95, 0.01, 'Trendline Slope: %f P Value: %f RSqrd Value: %f' % 
+	    (slope, p_value, r_value), verticalalignment='bottom', 
+	    horizontalalignment='right', transform=ax.transAxes, fontsize=8)
+	plt.savefig('%s/5_YearAve_Annual_Precipitation.%s' % (Output, f), 
+		dpi=None, facecolor='w', edgecolor='b', orientation='portrait', 
+		papertype=None, format=None, transparent=False, bbox_inches=None, 
+		pad_inches=0.1, frameon=None)
+	# plt.show()
+	plt.close()
+	StationExports.append(slope)
+	StationExports.append(p_value)
+	StationExports.append(r_value)
+
+	########################## 9 year average annual precip
+	# Define the window size for the mean, add 1 to start at 1
+	Window = 10
+	# Define a temporary average value
+	WT = 0
+	# Define size of actual window, will be odd number
+	Size = Window-1
+	# # Define max limit for the analysis, the max index to run to
+	MaxV = (Lenght)-((Size-1)/2)
+	# Define the minimum value to start the analysis
+	MinV = ((Size-1)/2)
+	# Define center value of window
+	ModVars = []
+	for c in range(1, Window):
+		ModVars.append(c)
+	CenterV = np.median(ModVars)
+	# Define averages for SI
+	Precipave = []
+	# Define years centered at each average
+	Years = []
+	# # Define a list of indexes for the analysis to go off of
+
+	for aItem in PrecipMod:
+		if aItem[-1]>MinV and aItem[-1]<MaxV:
+			# Write the indexes for all neighboring data for average calc
+			TempI = []
+			for z in range(1, Window):
+				# This value will represent the modifying variables
+				IndexByz = int(z-CenterV)
+				# The index on the list item will modified to write a list of 
+				# index values equal to its neighboring data sets
+				TempI.append(IndexByz+aItem[-1])
+			# Filter by each index value selected
+			for Index in TempI:
+				for Mod in PrecipMod:
+					if Mod[-1]==Index:
+						WT = WT+Mod[0]
+			Precipave.append(WT/Size)
+			WT = 0
+
+
+	# Define central years for each average
+	EndMod = int(Size/2)
+	for x in range(BaseData[0][0]+EndMod, BaseData[-1][0]-EndMod):
+		Years.append(x)
+
+	fig, ax = plt.subplots(1, 1)
+	Years = np.array(Years)
+	S = np.array(Precipave)
+	mask = ~np.isnan(Years) & ~np.isnan(S)
+	ax.grid(True)
+	ax.plot(Years, S, label='Rainfall Total (mm)')
+	# ax.plot(x, y2, label='Reversed emp.')
+	ax.legend(loc='upper right')
+	ax.set_title('Annual Precipitation (9 Year Average)')
+	ax.set_xlabel('Central Year')
+	ax.set_ylabel('Average Rainfall (mm)')
+	# ax.set_yticks([0.2, 0.4, 0.6, 0.8, 1], minor=False)
+	ax.set_yticks([0.9], minor=True)
+	# ax.yaxis.grid(True, which='major', color='g', linewidth=0.5)
+	ax.yaxis.grid(True, which='minor', color='r', linewidth=1.25)
+	slope, intercept, r_value, p_value, std_err = stats.linregress(Years[mask], S[mask])
+	plt.plot(Years,intercept+slope*Years, 'r')
+	ax.text(0.95, 0.01, 'Trendline Slope: %f P Value: %f RSqrd Value: %f' % 
+	    (slope, p_value, r_value), verticalalignment='bottom', 
+	    horizontalalignment='right', transform=ax.transAxes, fontsize=8)
+	plt.savefig('%s/9_YearAve_Annual_Precipitation.%s' % (Output, f), 
+		dpi=None, facecolor='w', edgecolor='b', orientation='portrait', 
+		papertype=None, format=None, transparent=False, bbox_inches=None, 
+		pad_inches=0.1, frameon=None)
+	# plt.show()
+	plt.close()
+	StationExports.append(slope)
+	StationExports.append(p_value)
+	StationExports.append(r_value)
 
 
 

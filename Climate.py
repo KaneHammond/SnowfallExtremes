@@ -230,6 +230,7 @@ if Path != 2:
   ProgBarLimit = len(Stations)
 if Path == 2:
   ProgBarLimit = 1
+print ('\n')
 print ('Initiating Analysis...')
 for i in tqdm.tqdm(range(ProgBarLimit)):
   # Years for temperature to omit

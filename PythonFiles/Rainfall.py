@@ -356,8 +356,6 @@ def Rainfall(StationName, RawData, SE, f,
 	ax.set_title('Total Annual Rainfall')
 	ax.set_xlabel('Year')
 	ax.set_ylabel('Total Rainfall (mm)')
-	# ax.set_yticks([0.2, 0.4, 0.6, 0.8, 1], minor=False)
-	ax.set_yticks([0.9], minor=True)
 	# ax.yaxis.grid(True, which='major', color='g', linewidth=0.5)
 	ax.yaxis.grid(True, which='minor', color='r', linewidth=1.25)
 	slope, intercept, r_value, p_value, std_err = stats.linregress(Years[mask], S[mask])
@@ -1035,4 +1033,6 @@ def Rainfall(StationName, RawData, SE, f,
 	StationExports.append(slope)
 	StationExports.append(p_value)
 	StationExports.append(r_value)
+
+	# sys.exit()
 	
